@@ -112,7 +112,7 @@ function debug(message){
 {else}
 
     <h3>{l s='Paymill payment' mod='pigmbhpaymill'}</h3>
-    <form id='submitForm' action="{$link->getModuleLink('pigmbhpaymill', 'validation', [], true)}" method="post">
+    <form id='submitForm' action="{$this_path_ssl}controllers/front/validation.php" method="post">
         <div class="error" style="display: none">
             <ul id="errors">
             </ul>
@@ -126,20 +126,20 @@ function debug(message){
             </p>
             <p class="none">
                 <label>{l s='Accountholder *' mod='pigmbhpaymill'}</label>
-                <input id="account-holder" type="text" size="14" class="text" value="{$customer}"/>
+                <input id="account-holder" type="text" size="14" style="float:right;" value="{$customer}"/>
             </p>
             <p class="none">
                 <label>{l s='Creditcard-number *' mod='pigmbhpaymill'}</label>
-                <input id="card-number" type="text" size="14" class="text" />
+                <input id="card-number" type="text" size="14" style="float:right;" />
             </p>
             <p class="none">
                 <label>{l s='CVC *' mod='pigmbhpaymill'}*</label>
-                <input id="card-cvc" type="text" size="4" class="text" />
+                <input id="card-cvc" type="text" size="4" style="float:right;" />
             </p>
             <p class="none">
                 <label>{l s='Valid until (MM/YYYY) *' mod='pigmbhpaymill'}</label>
-                <input id="card-expiry-year" type="text" style="width: 60px; display: inline-block;" class="text" />
-                <input id="card-expiry-month" type="text" style="width: 30px; display: inline-block;" class="text" />
+                <input id="card-expiry-year" type="text" style="width: 60px; display: inline-block;float:right;" />
+                <input id="card-expiry-month" type="text" style="width: 30px; display: inline-block;float:right;"/>
             </p>
             <p class="description">{l s='Fields marked with a * are required' mod='pigmbhpaymill'}
             </p>
@@ -150,15 +150,15 @@ function debug(message){
             <input type="hidden" name="payment" value="debit">
             <p class="none">
                 <label>{l s='Accountholder *' mod='pigmbhpaymill'}</label>
-                <input id="paymill_accountholder" type="text" size="15" class="text" />
+                <input id="paymill_accountholder" type="text" size="15" style="float:right;" />
             </p>
             <p class="none">
                 <label>{l s='Accountnumber *' mod='pigmbhpaymill'}</label>
-                <input id="paymill_accountnumber" type="text" size="15" class="text" />
+                <input id="paymill_accountnumber" type="text" size="15" style="float:right;" />
             </p>
             <p class="none">
                 <label>{l s='Banknumber *' mod='pigmbhpaymill'}</label>
-                <input id="paymill_banknumber" type="text" size="15" class="text" />
+                <input id="paymill_banknumber" type="text" size="15" style="float:right;" />
             </p>
             <p class="description">{l s='Fields marked with a * are required' mod='pigmbhpaymill'}
             </p>
@@ -169,7 +169,7 @@ function debug(message){
 
         </div>
         <p class="cart_navigation">
-            <a href="{$link->getPageLink('order', true, ['step'=> '3'])}" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
+            <a href="{$link->getPageLink('order.php', true)}?step=3" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
             <input type="button" id='submitButton' value="{l s='Order' mod='pigmbhpaymill'}" class="exclusive_large" />
         </p>
     </form>

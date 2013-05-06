@@ -24,7 +24,7 @@ class PigmbhPaymill extends PaymentModule
         $this->author = 'PayIntelligent GmbH';
         $this->need_instance = 0;
         $this->currencies = true;
-	$this->currencies_mode = 'checkbox';
+        $this->currencies_mode = 'checkbox';
 
         parent::__construct();
         $this->loadConfiguration();
@@ -68,7 +68,9 @@ class PigmbhPaymill extends PaymentModule
         if (!$this->active)
             return;
 
-        $this->smarty->assign(array(
+        global $smarty;
+
+        $smarty->assign(array(
             'this_path' => $this->_path,
             'this_path_ssl' => Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/',
             'debit' => Configuration::get('PIGMBH_PAYMILL_DEBIT'),
@@ -82,7 +84,7 @@ class PigmbhPaymill extends PaymentModule
         if (!$this->active)
             return;
 
-        return $this->display(__FILE__, 'confirmation.tpl');
+        return $this->display(__FILE__, '/views/templates/hook/confirmation.tpl');
     }
 
     public function createDatabaseTables()
@@ -101,8 +103,8 @@ class PigmbhPaymill extends PaymentModule
                 . ");";
         $db = Db::getInstance();
         try {
-            $db->query($sqlCreditCard);
-            $db->query($sqlDebit);
+            $db->execute($sqlCreditCard);
+            $db->execute($sqlDebit);
             return true;
         } catch (Exception $exception) {
             return false;
