@@ -1,7 +1,7 @@
 Paymill-Prestashop
 ==================
 
-Payment plugin for Prestashop Version 1.5.3.1.
+Payment plugin for Prestashop Version 1.4.8.2.
 
 Download the module here: https://github.com/Paymill/Paymill-PrestaShop/archive/master.zip
 
