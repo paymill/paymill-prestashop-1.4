@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Paymill-Prestashop-1.4.8.2.
 ==================
 
@@ -13,4 +12,3 @@ Download the module here: https://github.com/Paymill/Paymill-Prestashop-1.4.8.2.
 # Logging
 
 - If you enable logging in the plugin configuration make sure that log.txt inside the plugin directory is writable. Otherwise logging information will not be stored to the logfile.
->>>>>>> branch 'master' of https://github.com/Paymill/Paymill-Prestashop-1.4.8.2..git
