@@ -48,7 +48,7 @@ $metadata = Configuration::get('PS_SHOP_NAME');
 $processData = array(
     'authorizedAmount' => $_SESSION['pigmbhPaymill']['authorizedAmount'],
     'token' => $token,
-    'amount' => (int) ($cart->getOrderTotal(true, Cart::BOTH) * 100),
+    'amount' => $_SESSION['pigmbhPaymill']['Amount'],
     'currency' => $currency,
     'name' => $customername,
     'email' => $customermail,
@@ -139,22 +139,8 @@ function processPayment($params)
     );
 // perform conection to the Paymill API and trigger the payment
     try {
-        if (!array_key_exists('paymentId', $params)) {
-            $payment = $paymentObject->create($payment_params);
-            if (!isset($payment['id'])) {
-                paymillLog('No Payment created: ' . var_export($payment, true));
-                return false;
-            } else {
-                paymillLog('Payment created: ' . $payment['id']);
-            }
-        } else {
-            $payment['id'] = $params['paymentId'];
-            paymillLog('Saved payment used: ' . $params['paymentId']);
-        }
-
-
         if (!array_key_exists('clientId', $params)) {
-// create client
+            // create client
             $client_params['creditcard'] = $payment['id'];
             $client = $clientsObject->create($client_params);
             if (!isset($client['id'])) {
@@ -168,8 +154,21 @@ function processPayment($params)
             paymillLog('Saved client used: ' . $params['clientId']);
         }
 
-// create transaction
-        $transactionParams['client'] = $client['id'];
+        if (!array_key_exists('paymentId', $params)) {
+            $payment_params['client'] = $client['id'];
+            $payment = $paymentObject->create($payment_params);
+            if (!isset($payment['id'])) {
+                paymillLog('No Payment created: ' . var_export($payment, true));
+                return false;
+            } else {
+                paymillLog('Payment created: ' . $payment['id']);
+            }
+        } else {
+            $payment['id'] = $params['paymentId'];
+            paymillLog('Saved payment used: ' . $params['paymentId']);
+        }
+
+        // create transaction
         $transactionParams['payment'] = $payment['id'];
         $transaction = $transactionsObject->create($transactionParams);
         if (!confirmTransaction($transaction)) {
@@ -282,7 +281,7 @@ function saveUserData($clientId, $paymentId, $userId)
         $sql = "REPLACE INTO `$table` (`clientId`, `paymentId`, `userId`) VALUES('$clientId', '$paymentId', $userId)";
         try {
             $result = $db->execute($sql);
-            if($result){
+            if ($result) {
                 paymillLog("UserData saved." . "VALUES('$clientId', '$paymentId', $userId);");
             }
         } catch (Exception $exception) {

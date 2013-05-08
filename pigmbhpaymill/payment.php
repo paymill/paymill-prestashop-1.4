@@ -42,7 +42,8 @@ if (Configuration::get('PIGMBH_PAYMILL_FASTCHECKOUT')) {
 
 $customers = CustomerCore::getCustomers();
 $currency = Currency::getCurrency((int) $cart->id_currency);
-$_SESSION['pigmbhPaymill']['authorizedAmount'] = intval($cart->getOrderTotal(true, Cart::BOTH) * 100);
+$_SESSION['pigmbhPaymill']['authorizedAmount'] = (int) round($cart->getOrderTotal(true, Cart::BOTH) * 100);
+$_SESSION['pigmbhPaymill']['Amount'] = (int) round($cart->getOrderTotal(true, Cart::BOTH) * 100);
 
 foreach($customers as $customer){
     if($customer['id_customer'] == $cart->id_customer){
