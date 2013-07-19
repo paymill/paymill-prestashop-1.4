@@ -33,15 +33,20 @@
         </div>
         {if $payment == "creditcard"}
             <input type="hidden" name="payment" value="creditcard">
+            <div class="debit">
+                {if $paymill_show_label == 'true'}
+                    <p><div class="paymill_powered"><div class="paymill_credits">{l s='Save creditcardpayment powered by' mod='pigmbhpaymill'} <a href="http://www.paymill.de" target="_blank">PAYMILL</a></div></div></p>
+                {/if}
+            </div>
         {elseif $payment == "debit"}
             <input type="hidden" name="payment" value="debit">
+            <div class="debit">
+                {if $paymill_show_label == 'true'}
+                    <p><div class="paymill_powered"><div class="paymill_credits">{l s='debitpayment powered by' mod='pigmbhpaymill'} <a href="http://www.paymill.de" target="_blank">PAYMILL</a></div></div></p>
+                {/if}
+            </div>
         {/if}
 
-        <div class="debit">
-            {if $paymill_show_label == 'true'}
-                <p><div class="paymill_powered"><div class="paymill_credits">{l s='Save debitpayment powered by' mod='pigmbhpaymill'} <a href="http://www.paymill.de" target="_blank">Paymill</a></div></div></p>
-            {/if}
-        </div>
         <p class="cart_navigation">
             <a href="{$link->getPageLink('order.php', true)}?step=3" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
             <input type="button" id='submitButton' value="{l s='Order' mod='pigmbhpaymill'}" class="exclusive_large" />
