@@ -119,9 +119,9 @@ class PigmbhPaymill extends PaymentModule
             . ");";
         $db = Db::getInstance();
         try {
-            $db->query($sqlLog);
-            $db->query($sqlCreditCard);
-            $db->query($sqlDebit);
+            $db->execute($sqlLog);
+            $db->execute($sqlCreditCard);
+            $db->execute($sqlDebit);
             return true;
         } catch (Exception $exception) {
             return false;

@@ -12,13 +12,6 @@ require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/Clients.php';
 require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/Payments.php';
 
 
-//include(dirname(__FILE__).'/controllers/front/payment.php');
-//global $smarty;
-//$payment = new PigmbhpaymillPaymentModuleFrontController();
-//$data = $payment->initContent();
-//$smarty->assign($data);
-//echo Module::display('pigmbhpaymill', 'views/templates/front/paymentForm.tpl');
-
 global $cart, $smarty;
 $db = Db::getInstance();
 session_start();
@@ -88,7 +81,7 @@ $data = array(
     'paymill_show_label' => Configuration::get('PIGMBH_PAYMILL_LABEL') == 'on',
     'paymill_debugging' => Configuration::get('PIGMBH_PAYMILL_DEBUG') == 'on',
     'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components',
-    'customer' => $customer['firstname'] . ", " . $customer['lastname'],
+    'customer' => $customer['firstname'] . " " . $customer['lastname'],
     'prefilledFormData' => $payment,
     'paymill_form_year' => range(date('Y', time('now')), date('Y', time('now')) + 10),
     'paymill_form_month' => array(
