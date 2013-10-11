@@ -1,5 +1,8 @@
 <?php
 
+require_once 'components/configurationHandler.php';
+require_once 'components/models/configurationModel.php';
+
 /**
  * PigmbhPaymill
  *
@@ -12,22 +15,28 @@ if (!defined('_PS_VERSION_'))
 class PigmbhPaymill extends PaymentModule
 {
 
+    private $_configurationHandler;
+
     /**
      * Sets the Information for the Modulmanager
      * Also creates an instance of this class
      */
     public function __construct()
     {
+        global $smarty;
         $this->name = 'pigmbhpaymill';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.4';
+        $this->version = "1.1.0";
         $this->author = 'PayIntelligent GmbH';
-        $this->need_instance = 0;
+        $this->need_instance = 1;
         $this->currencies = true;
         $this->currencies_mode = 'checkbox';
-
+        Configuration::updateValue('PIGMBH_PAYMILL_VERSION', $this->version);
         parent::__construct();
-        $this->loadConfiguration();
+
+
+        $this->smarty = $smarty;
+        $this->_configurationHandler = new configurationHandler();
         $this->displayName = $this->l('PigmbhPaymill');
         $this->description = $this->l('Payment via Paymill.');
     }
@@ -39,11 +48,7 @@ class PigmbhPaymill extends PaymentModule
      */
     public function install()
     {
-        return parent::install()
-                && $this->registerHook('payment')
-                && $this->registerHook('paymentReturn')
-                && $this->defaultConfiguration()
-                && $this->createDatabaseTables();
+        return parent::install() && $this->registerHook('payment') && $this->registerHook('paymentReturn') && $this->_configurationHandler->setDefaultConfiguration() && $this->createDatabaseTables() && $this->_addPaymillOrderState();
     }
 
     /**
@@ -53,9 +58,8 @@ class PigmbhPaymill extends PaymentModule
      */
     public function uninstall()
     {
-        return $this->unregisterHook('payment')
-                && $this->unregisterHook('paymentReturn')
-                && parent::uninstall();
+        Configuration::deleteByName('PIGMBH_PAYMILL_ORDERSTATE', null);
+        return $this->unregisterHook('payment') && $this->unregisterHook('paymentReturn') && parent::uninstall();
     }
 
     /**
@@ -65,46 +69,59 @@ class PigmbhPaymill extends PaymentModule
      */
     public function hookPayment($params)
     {
-        if (!$this->active)
+        if (!$this->active) {
             return;
+        }
 
-        global $smarty;
-
-        $smarty->assign(array(
+        $this->smarty->assign(array(
             'this_path' => $this->_path,
             'this_path_ssl' => Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/',
             'debit' => Configuration::get('PIGMBH_PAYMILL_DEBIT'),
-            'creditcard' => Configuration::get('PIGMBH_PAYMILL_CREDITCARD')
+            'creditcard' => Configuration::get('PIGMBH_PAYMILL_CREDITCARD'),
+            'valid_key' => !in_array(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), array('', null)) && !in_array(Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'), array('', null)),
+            'paymillerror' => Tools::getValue('paymillerror') == 1 ? $this->l('Payment could not be processed.') : null,
+            'paymillpayment' => Tools::getValue('paymillpayment')
         ));
-        return $this->display(__FILE__, 'payment.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/payment.tpl');
     }
 
     public function hookPaymentReturn($params)
     {
-        if (!$this->active)
+        if (!$this->active) {
             return;
+        }
 
-        return $this->display(__FILE__, '/views/templates/hook/confirmation.tpl');
+        return $this->display(__FILE__, 'confirmation.tpl');
     }
 
     public function createDatabaseTables()
     {
+        $sqlLog = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_logging` ("
+            . "`id` int(11) NOT NULL AUTO_INCREMENT,"
+            . "`identifier` text NOT NULL,"
+            . "`debug` text NOT NULL,"
+            . "`message` text NOT NULL,"
+            . "`date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+            . "PRIMARY KEY (`id`)"
+            . ") AUTO_INCREMENT=1";
+
         $sqlDebit = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_directdebit_userdata` ( "
-                . "`userId` int(11) NOT NULL, "
-                . "`clientId` text NOT NULL, "
-                . "`paymentId` text NOT NULL, "
-                . "PRIMARY KEY (`userId`) "
-                . ");";
+            . "`userId` int(11) NOT NULL, "
+            . "`clientId` text NOT NULL, "
+            . "`paymentId` text NOT NULL, "
+            . "PRIMARY KEY (`userId`) "
+            . ");";
         $sqlCreditCard = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_creditcard_userdata` ( "
-                . "`userId` int(11) NOT NULL, "
-                . "`clientId` text NOT NULL, "
-                . "`paymentId` text NOT NULL, "
-                . "PRIMARY KEY (`userId`) "
-                . ");";
+            . "`userId` int(11) NOT NULL, "
+            . "`clientId` text NOT NULL, "
+            . "`paymentId` text NOT NULL, "
+            . "PRIMARY KEY (`userId`) "
+            . ");";
         $db = Db::getInstance();
         try {
-            $db->execute($sqlCreditCard);
-            $db->execute($sqlDebit);
+            $db->query($sqlLog);
+            $db->query($sqlCreditCard);
+            $db->query($sqlDebit);
             return true;
         } catch (Exception $exception) {
             return false;
@@ -119,34 +136,97 @@ class PigmbhPaymill extends PaymentModule
      */
     public function getContent()
     {
-        $this->_html = '<h2>' . $this->displayName . '</h2>';
+        //configuration
         if (Tools::isSubmit('btnSubmit')) {
-            $this->updateConfiguration();
+            $oldConfig = $this->_configurationHandler->loadConfiguration();
+            $newConfig = new configurationModel();
+            $toleranz = Tools::getValue('differentamount');
+            if (is_numeric($toleranz)) {
+                $toleranz = number_format($toleranz, 2, '.', '');
+            } else {
+                $toleranz = number_format(0, 2, '.', '');
+            }
+            $newConfig->setCreditcard(Tools::getValue('creditcard', 'OFF'));
+            $newConfig->setDirectdebit(Tools::getValue('debit', 'OFF'));
+            $newConfig->setDebug(Tools::getValue('debug', 'OFF'));
+            $newConfig->setFastcheckout(Tools::getValue('fastcheckout', 'OFF'));
+            $newConfig->setLabel(Tools::getValue('label', 'OFF'));
+            $newConfig->setLogging(Tools::getValue('logging', 'OFF'));
+            $newConfig->setPrivateKey(trim(Tools::getValue('privatekey', $oldConfig->getPrivateKey())));
+            $newConfig->setPublicKey(trim(Tools::getValue('publickey', $oldConfig->getPublicKey())));
+            $this->_configurationHandler->updateConfiguration($newConfig);
         }
-        $this->showConfigurationForm();
-        return $this->_html;
+
+        //logging
+        $db = Db::getInstance();
+        $data = array();
+        $detailData = array();
+        $showDetail = false;
+        $search = Tools::getValue('searchvalue', false);
+        $connectedSearch = Tools::getValue('connectedsearch', "off");
+        $limit = 10;
+        $where = $search && !empty($search) ? " WHERE `debug` LIKE '%" . $search . "%' OR `message` LIKE '%" . $search . "%'" : null;
+        $db->execute("SELECT * FROM `pigmbh_paymill_logging`" . $where, true);
+        $maxPage = ceil($db->numRows() / $limit) == 0 ? 1 : range(1, ceil($db->numRows() / $limit));
+        $page = $maxPage < Tools::getValue('paymillpage', 1) ? $maxPage : Tools::getValue('paymillpage', 1);
+        $start = $page * $limit - $limit;
+
+        //Details
+        if (Tools::getValue('paymillid') && Tools::getValue('paymillkey')) {
+            $showDetail = true;
+            $row = $db->executeS("SELECT * FROM `pigmbh_paymill_logging` WHERE id='" . Tools::getValue('paymillid') . "';", true);
+            $detailData['title'] = 'DEBUG';
+            $detailData['data'] = $row[0]['debug'];
+        }
+
+        //getAll Data
+        if ($connectedSearch === "on") {
+            $where = "WHERE `identifier` in(SELECT `identifier` FROM `pigmbh_paymill_logging` $where)";
+        }
+        $sql = "SELECT `id`,`identifier`,`date`,`message`,`debug` FROM `pigmbh_paymill_logging` $where LIMIT $start, $limit";
+        foreach ($db->executeS($sql, true) as $row) {
+            foreach ($row as $key => $value) {
+                $value = is_array($value) ? $value[1] . "<br><br>" . $value[0] : $value;
+                $unsortedPrintData[$key] = strlen($value) >= 300 ? "<a href='" . $_SERVER['REQUEST_URI'] . "&paymillid=" . $row['id'] . "&paymillkey=" . $key . "&searchvalue=" . $search . "'>" . $this->l('see more') . "</a>" : $value;
+            }
+            $data[] = $unsortedPrintData;
+        }
+
+        $this->smarty->assign(array(
+            'config' => $this->showConfigurationForm(),
+            'data' => $data,
+            'detailData' => $detailData,
+            'showDetail' => $showDetail,
+            'paymillMaxPage' => $maxPage,
+            'paymillCurrentPage' => $page,
+            'paymillSearchValue' => $search,
+            'paymillConnectedSearch' => $connectedSearch
+        ));
+
+        return $this->display(__FILE__, 'views/templates/admin/logging.tpl');
     }
 
     private function showConfigurationForm()
     {
-        $this->_html .=
-                '<form action="' . Tools::htmlentitiesUTF8($_SERVER['REQUEST_URI']) . '" method="post">
-			<fieldset>
-			<legend>' . 'Konfiguration' . '</legend>
-				<table border="0" width="500" cellpadding="0" cellspacing="0" id="form">
-					<tr><td width="130" style="height: 35px;">' . $this->l('Public Key') . '</td><td><input type="text" name="publickey" value="' . htmlentities(Tools::getValue('publickey', $this->publickey), ENT_COMPAT, 'UTF-8') . '" style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Private Key') . '</td><td><input type="text" name="privatekey" value="' . htmlentities(Tools::getValue('privatekey', $this->privatekey), ENT_COMPAT, 'UTF-8') . '" style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Bridge URL') . '</td><td><input type="text" name="bridgeurl" value="' . htmlentities(Tools::getValue('bridgeurl', $this->bridgeurl), ENT_COMPAT, 'UTF-8') . '" style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('API URL') . '</td><td><input type="text" name="apiurl" value="' . htmlentities(Tools::getValue('apiurl', $this->apiurl), ENT_COMPAT, 'UTF-8') . '" style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Activate debugging') . '</td><td><input type="checkbox" name="debug" ' . $this->getCheckboxState(htmlentities(Tools::getValue('debug', $this->debug), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Activate logging') . '</td><td><input type="checkbox" name="logging" ' . $this->getCheckboxState(htmlentities(Tools::getValue('logging', $this->logging), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Show Paymill label') . '</td><td><input type="checkbox" name="label" ' . $this->getCheckboxState(htmlentities(Tools::getValue('label', $this->label), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Activate debit-payment') . '</td><td><input type="checkbox" name="debit" ' . $this->getCheckboxState(htmlentities(Tools::getValue('debit', $this->debit), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Activate creditcard-payment') . '</td><td><input type="checkbox" name="creditcard" ' . $this->getCheckboxState(htmlentities(Tools::getValue('creditcard', $this->creditcard), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-					<tr><td width="130" style="height: 35px;">' . $this->l('Activate fastCheckout') . '</td><td><input type="checkbox" name="fastcheckout" ' . $this->getCheckboxState(htmlentities(Tools::getValue('fastcheckout', $this->fastcheckout), ENT_COMPAT, 'UTF-8')) . ' style="width: 300px;" /></td></tr>
-                                        <tr><td colspan="2" align="center"><input class="button" name="btnSubmit" value="' . $this->l('Save') . '" type="submit" /></td></tr>
-                                        <tr><td colspan="2" style="height: 15px;"></td></tr>
-                                        <tr><td colspan="2" align="center"><textarea style="width:600px;" rows="15" readonly />' . file_get_contents(dirname(__FILE__) . '/log.txt') . '</textarea></td></tr>
+        $configurationModel = $this->_configurationHandler->loadConfiguration();
+        return
+            '<link rel="stylesheet" type="text/css" href="' . _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/paymill_styles.css">
+            <form action="' . Tools::htmlentitiesUTF8($_SERVER['REQUEST_URI']) . '" method="post">
+			<fieldset class="paymill_center">
+			<legend>' . $this->displayName . '</legend>
+				<table cellpadding="0" cellspacing="0">
+                    <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_payments') . '</td></tr>
+                    <tr><td class="paymill_config_label">' . $this->l('Activate creditcard-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="creditcard" ' . $this->getCheckboxState($configurationModel->getCreditcard()) . ' /></td></tr>
+                    <tr><td class="paymill_config_label">' . $this->l('Activate debit-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="debit" ' . $this->getCheckboxState($configurationModel->getDirectdebit()) . ' /></td></tr>
+                    <tr><td colspan="2" style="height: 15px;"></td></tr>
+                    <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_main') . '</td></tr>
+                    <tr><td class="paymill_config_label">' . $this->l('Private Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="privatekey" value="' . $configurationModel->getPrivateKey() . '" /></td></tr>
+                    <tr><td class="paymill_config_label">' . $this->l('Public Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="publickey" value="' . $configurationModel->getPublicKey() . '" /></td></tr>
+					<tr><td class="paymill_config_label">' . $this->l('Activate debugging') . '</td><td class="paymill_config_value"><input type="checkbox" name="debug" ' . $this->getCheckboxState($configurationModel->getDebug()) . ' /></td></tr>
+					<tr><td class="paymill_config_label">' . $this->l('Activate logging') . '</td><td class="paymill_config_value"><input type="checkbox" name="logging" ' . $this->getCheckboxState($configurationModel->getLogging()) . ' /></td></tr>
+					<tr><td class="paymill_config_label">' . $this->l('Show Paymill label') . '</td><td class="paymill_config_value"><input type="checkbox" name="label" ' . $this->getCheckboxState($configurationModel->getLabel()) . ' /></td></tr>
+                    <tr><td class="paymill_config_label">' . $this->l('Activate fastCheckout') . '</td><td class="paymill_config_value"><input type="checkbox" name="fastcheckout" ' . $this->getCheckboxState($configurationModel->getFastcheckout()) . ' /></td></tr>
+                    <tr><td colspan="2" align="center"><input class="button" name="btnSubmit" value="' . $this->l('Save') . '" type="submit" /></td></tr>
 				</table>
 			</fieldset>
 		</form>';
@@ -155,89 +235,41 @@ class PigmbhPaymill extends PaymentModule
     private function getCheckboxState($value)
     {
         $return = '';
-        if (in_array($value, array("on", true))) {
+        if (in_array(strtolower($value), array("on"))) {
             $return = 'checked';
         }
         return $return;
     }
 
-    private function updateConfiguration()
+    private function _addPaymillOrderState()
     {
-        if (Tools::isSubmit('btnSubmit')) {
-            Configuration::updateValue('PIGMBH_PAYMILL_PUBLICKEY', Tools::getValue('publickey'));
-            Configuration::updateValue('PIGMBH_PAYMILL_PRIVATEKEY', Tools::getValue('privatekey'));
-            Configuration::updateValue('PIGMBH_PAYMILL_BRIDGEURL', Tools::getValue('bridgeurl'));
-            Configuration::updateValue('PIGMBH_PAYMILL_APIURL', Tools::getValue('apiurl'));
-            Configuration::updateValue('PIGMBH_PAYMILL_DEBUG', Tools::getValue('debug'));
-            Configuration::updateValue('PIGMBH_PAYMILL_LOGGING', Tools::getValue('logging'));
-            Configuration::updateValue('PIGMBH_PAYMILL_LABEL', Tools::getValue('label'));
-            Configuration::updateValue('PIGMBH_PAYMILL_DEBIT', Tools::getValue('debit'));
-            Configuration::updateValue('PIGMBH_PAYMILL_CREDITCARD', Tools::getValue('creditcard'));
-            Configuration::updateValue('PIGMBH_PAYMILL_FASTCHECKOUT', Tools::getValue('fastcheckout'));
-            $this->loadConfiguration();
-            $this->_html .= '<div class="conf confirm"> ' . $this->l('Settings updated') . '</div>';
-        }
-    }
+        if (!Configuration::get('PIGMBH_PAYMILL_ORDERSTATE')) {
+            $newOrderState = new OrderState();
+            $newOrderState->name = array();
+            $newOrderState->module_name = $this->name;
+            $newOrderState->send_email = false;
+            $newOrderState->color = '#73E650';
+            $newOrderState->hidden = false;
+            $newOrderState->delivery = true;
+            $newOrderState->logable = true;
+            $newOrderState->invoice = true;
+            $newOrderState->paid = true;
+            foreach (Language::getLanguages() as $language) {
+                if (strtolower($language['iso_code']) == 'de'){
+                    $newOrderState->name[$language['id_lang']] = 'Bezahlung via PAYMILL erfolgreich';
+                }else{
+                    $newOrderState->name[$language['id_lang']] = 'Payment via PAYMILL successfully';
+                }
+            }
 
-    private function defaultConfiguration()
-    {
-        Configuration::updateValue('PIGMBH_PAYMILL_BRIDGEURL', 'https://bridge.paymill.com/');
-        Configuration::updateValue('PIGMBH_PAYMILL_APIURL', 'https://api.paymill.com/v2/');
-        Configuration::updateValue('PIGMBH_PAYMILL_DEBUG', 'ON');
-        Configuration::updateValue('PIGMBH_PAYMILL_LOGGING', 'ON');
-        Configuration::updateValue('PIGMBH_PAYMILL_LABEL', 'OFF');
-        Configuration::updateValue('PIGMBH_PAYMILL_DEBIT', 'ON');
-        Configuration::updateValue('PIGMBH_PAYMILL_CREDITCARD', 'ON');
-        Configuration::updateValue('PIGMBH_PAYMILL_FASTCHECKOUT', 'OFF');
+            if ($newOrderState->add()) {
+                $paymillIcon = dirname(__FILE__) . '/logo.gif';
+                $newStateIcon = dirname(__FILE__) . '/../../img/os/' . (int) $newOrderState->id . '.gif';
+                copy($paymillIcon, $newStateIcon);
+            }
+            Configuration::updateValue('PIGMBH_PAYMILL_ORDERSTATE', (int) $newOrderState->id);
+        }
         return true;
-    }
-
-    private function loadConfiguration()
-    {
-        $config = Configuration::getMultiple(
-                        array(
-                            'PIGMBH_PAYMILL_PUBLICKEY',
-                            'PIGMBH_PAYMILL_PRIVATEKEY',
-                            'PIGMBH_PAYMILL_BRIDGEURL',
-                            'PIGMBH_PAYMILL_APIURL',
-                            'PIGMBH_PAYMILL_DEBUG',
-                            'PIGMBH_PAYMILL_LOGGING',
-                            'PIGMBH_PAYMILL_LABEL',
-                            'PIGMBH_PAYMILL_DEBIT',
-                            'PIGMBH_PAYMILL_CREDITCARD',
-                            'PIGMBH_PAYMILL_FASTCHECKOUT'
-                        )
-        );
-        if (isset($config['PIGMBH_PAYMILL_PUBLICKEY'])) {
-            $this->publickey = $config['PIGMBH_PAYMILL_PUBLICKEY'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_PRIVATEKEY'])) {
-            $this->privatekey = $config['PIGMBH_PAYMILL_PRIVATEKEY'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_BRIDGEURL'])) {
-            $this->bridgeurl = $config['PIGMBH_PAYMILL_BRIDGEURL'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_APIURL'])) {
-            $this->apiurl = $config['PIGMBH_PAYMILL_APIURL'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_DEBUG'])) {
-            $this->debug = $config['PIGMBH_PAYMILL_DEBUG'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_LOGGING'])) {
-            $this->logging = $config['PIGMBH_PAYMILL_LOGGING'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_LABEL'])) {
-            $this->label = $config['PIGMBH_PAYMILL_LABEL'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_DEBIT'])) {
-            $this->debit = $config['PIGMBH_PAYMILL_DEBIT'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_CREDITCARD'])) {
-            $this->creditcard = $config['PIGMBH_PAYMILL_CREDITCARD'];
-        }
-        if (isset($config['PIGMBH_PAYMILL_FASTCHECKOUT'])) {
-            $this->fastcheckout = $config['PIGMBH_PAYMILL_FASTCHECKOUT'];
-        }
     }
 
 }
