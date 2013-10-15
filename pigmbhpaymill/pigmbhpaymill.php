@@ -91,7 +91,7 @@ class PigmbhPaymill extends PaymentModule
             return;
         }
 
-        return $this->display(__FILE__, 'confirmation.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/confirmation.tpl');
     }
 
     public function createDatabaseTables()
