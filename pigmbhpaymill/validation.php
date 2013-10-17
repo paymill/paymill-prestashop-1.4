@@ -33,10 +33,10 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         $this->paramName = "start_process";
         if (empty($token)) {
             $this->log('No paymill token was provided. Redirect to payments page.', null);
-            Tools::redirect('order.php&step=1&paymillerror=1&paymillpayment=' . $payment);
+            Tools::redirect('order.php?step=1&paymillerror=1&paymillpayment=' . $payment);
         } elseif (!in_array($payment, $validPayments)) {
             $this->log('The selected Paymentmethod is not valid.', $payment);
-            Tools::redirect('order.php&step=1&paymillerror=1&paymillpayment=' . $payment);
+            Tools::redirect('order.php?step=1&paymillerror=1&paymillpayment=' . $payment);
         }
         $this->log('Start processing payment with token', $token);
 
@@ -79,7 +79,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
                 (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $user->secure_key);
             Tools::redirect('order-confirmation.php?key=' . $user->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
         } else {
-            Tools::redirect('order.php&step=3&paymillerror=1&paymillpayment=' . $payment);
+            Tools::redirect('order.php?step=3&paymillerror=1&paymillpayment=' . $payment);
         }
     }
 
