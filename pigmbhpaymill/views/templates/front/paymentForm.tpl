@@ -231,10 +231,10 @@
         </div>
         <p class="cart_navigation">
             {if $opc}
-                <a href="{$link->getPageLink('order', true)}" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
+                <a href="{$link->getPageLink('order.php', true)}?step=3" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
             {/if}
             {if !$opc}
-                <a href="{$link->getPageLink('order', true)}?step=3" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
+                <a href="{$link->getPageLink('order.php', true)}?step=3" class="button_large">{l s='Payment selection' mod='pigmbhpaymill'}</a>
             {/if}
             <input type="submit" id='submitButton' value="{l s='Order' mod='pigmbhpaymill'}" class="exclusive_large" />
         </p>
