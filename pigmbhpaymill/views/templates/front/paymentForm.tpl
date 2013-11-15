@@ -12,7 +12,7 @@
         var result = true;
         $('.error').remove();
     {if $payment == 'creditcard'}
-        if ($('#account-holder').val() === "") {
+        if (!paymill.validateHolder($('#account-holder').val())) {
             $('#account-holder').after("<p class='error paymillerror'>{l s='Please enter the creditcardholders name.' mod='pigmbhpaymill'}</p>");
             result = false;
         }
@@ -31,7 +31,7 @@
             result = false;
         }
     {elseif $payment == 'debit'}
-        if (!$('#paymill_accountholder').val()) {
+        if (!paymill.validateHolder($('#paymill_accountholder').val())) {
             $('#paymill_accountholder').after("<p class='error paymillerror'>{l s='Please enter the accountholder' mod='pigmbhpaymill'}</p>");
             result = false;
         }
