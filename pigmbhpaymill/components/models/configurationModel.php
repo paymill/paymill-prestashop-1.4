@@ -32,11 +32,6 @@ class configurationModel
     /**
      * @var boolean
      */
-    private $_label;
-
-    /**
-     * @var boolean
-     */
     private $_fastcheckout;
 
     /**
@@ -105,25 +100,12 @@ class configurationModel
         return $this->_logging;
     }
 
+    /**
+     * @param boolean $logging
+     */
     public function setLogging($logging)
     {
         $this->_logging = $logging;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getLabel()
-    {
-        return $this->_label;
-    }
-
-    /**
-     * @param boolean $label
-     */
-    public function setLabel($label)
-    {
-        $this->_label = $label;
     }
 
     /**
