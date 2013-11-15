@@ -45,6 +45,28 @@ class configurationModel
     private $_directdebit;
 
     /**
+     * @var boolean
+     */
+    private $_sepa;
+
+    /**
+     * @return boolean
+     */
+    public function getSepa()
+    {
+        return $this->_sepa;
+    }
+
+    /**
+     * @param boolean $sepa
+     */
+    public function setSepa($sepa)
+    {
+        $this->_sepa = $sepa;
+    }
+
+
+    /**
      * @return string
      */
     public function getPrivateKey()

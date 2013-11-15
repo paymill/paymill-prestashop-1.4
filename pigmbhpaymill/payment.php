@@ -77,6 +77,7 @@ $data = array(
     'displayTotal' => $cart->getOrderTotal(true, Cart::BOTH),
     'this_path_ssl' => Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/pigmbhpaymill/',
     'public_key' => Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'),
+    'paymill_sepa' => Configuration::get('PIGMBH_PAYMILL_SEPA'),
     'payment' => Tools::getValue('payment'),
     'paymill_debugging' => Configuration::get('PIGMBH_PAYMILL_DEBUG') == 'on',
     'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components',

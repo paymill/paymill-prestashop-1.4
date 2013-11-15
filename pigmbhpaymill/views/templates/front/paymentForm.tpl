@@ -35,6 +35,7 @@
             $('#paymill_accountholder').after("<p class='error paymillerror'>{l s='Please enter the accountholder' mod='pigmbhpaymill'}</p>");
             result = false;
         }
+        {if !$paymill_sepa}
         if (!paymill.validateAccountNumber($('#paymill_accountnumber').val())) {
             $('#paymill_accountnumber').after("<p class='error paymillerror'>{l s='Please enter your accountnumber.' mod='pigmbhpaymill'}</p>");
             result = false;
@@ -43,6 +44,16 @@
             $('#paymill_banknumber').after("<p class='error paymillerror'>{l s='Please enter your bankcode.' mod='pigmbhpaymill'}</p>");
             result = false;
         }
+        {else}
+        if ($('#paymill_iban').val() == "") {
+            $('#paymill_iban').after("<p class='error paymillerror'>{l s='Please enter your iban.' mod='pigmbhpaymill'}</p>");
+            result = false;
+        }
+        if ($('#paymill_bic').val() == "") {
+            $('#paymill_bic').after("<p class='error paymillerror'>{l s='Please enter your bic.' mod='pigmbhpaymill'}</p>");
+            result = false;
+        }
+        {/if}
     {/if}
         if (!result) {
             $("#submitButton").removeAttr('disabled');
@@ -78,11 +89,19 @@
                                 currency: '{$currency_iso}'
                             }, PaymillResponseHandler);
     {elseif $payment == 'debit'}
+                            {if !$paymill_sepa}
                             paymill.createToken({
                                 number: $('#paymill_accountnumber').val(),
                                 bank: $('#paymill_banknumber').val(),
                                 accountholder: $('#paymill_accountholder').val()
                             }, PaymillResponseHandler);
+                            {else}
+                            paymill.createToken({
+                                iban: $('#paymill_iban').val(),
+                                bic: $('#paymill_bic').val(),
+                                accountholder: $('#paymill_accountholder').val()
+                            }, PaymillResponseHandler);
+                            {/if}
     {/if}
                         } catch (e) {
                             alert("Ein Fehler ist aufgetreten: " + e);
@@ -104,6 +123,19 @@
                 $('#card-number').addClass("paymill-card-number-" + brand);
             }
         });
+        {if $paymill_sepa}
+        $('#paymill_iban').keyup(function() {
+            var iban = $('#paymill_iban').val();
+            var newIban = "DE";
+            if(!iban.match(/^DE/)){
+                if(iban.match(/^DE(.*)/)){
+                    newIban = newIban + iban.match(/^DE(.*)/);
+                }
+                $('#paymill_iban').val(newIban);
+            }
+        });
+        $('#paymill_iban').trigger('keyup');
+        {/if}
     });
     function getFormData(array, ignoreEmptyValues) {
         $('#submitForm :input').not(':hidden').each(function() {
@@ -208,6 +240,7 @@
                     <label>{l s='Accountholder *' mod='pigmbhpaymill'}</label><br>
                     <input id="paymill_accountholder" type="text" size="15" class="text" value="{if $prefilledFormData['holder']}{$prefilledFormData['holder']}{else}{$customer}{/if}"/>
                 </p>
+                {if !$paymill_sepa}
                 <p class="none">
                     <label>{l s='Accountnumber *' mod='pigmbhpaymill'}</label><br>
                     <input id="paymill_accountnumber" type="text" size="15" class="text" value="{if $prefilledFormData['account']}{$prefilledFormData['account']}{/if}" />
@@ -216,6 +249,16 @@
                     <label>{l s='Banknumber *' mod='pigmbhpaymill'}</label><br>
                     <input id="paymill_banknumber" type="text" size="15" class="text" value="{if $prefilledFormData['code']}{$prefilledFormData['code']}{/if}" />
                 </p>
+                {else}
+                <p class="none">
+                    <label>IBAN</label><br>
+                    <input id="paymill_iban" type="text" size="15" class="text" value="{if $prefilledFormData['iban']}{$prefilledFormData['iban']}{/if}" />
+                </p>
+                <p class="none">
+                    <label>BIC</label><br>
+                    <input id="paymill_bic" type="text" size="15" class="text" value="{if $prefilledFormData['bic']}{$prefilledFormData['bic']}{/if}" />
+                </p>
+                {/if}
                 <p class="description">
                     {l s='The following Amount will be charged' mod='pigmbhpaymill'}: <b>{displayPrice price=$displayTotal}</b><br>
                     {l s='Fields marked with a * are required' mod='pigmbhpaymill'}
