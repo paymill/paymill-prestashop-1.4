@@ -61,9 +61,10 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             $userData = $db->getRow('SELECT `clientId`,`paymentId` FROM `pigmbh_paymill_directdebit_userdata` WHERE `userId`=' . $user["id_customer"]);
         }
 
-        $paymentProcessor->setClientId(!empty($userData['clientId']) ? $userData['clientId'] : null);
-        $paymentProcessor->setPaymentId(!empty($userData['paymentId']) ? $userData['paymentId'] : null);
-
+        if ($token === "dummyToken") {
+            $paymentProcessor->setClientId(!empty($userData['clientId']) ? $userData['clientId'] : null);
+            $paymentProcessor->setPaymentId(!empty($userData['paymentId']) ? $userData['paymentId'] : null);
+        }
         $result = $paymentProcessor->processPayment();
         $this->paramName = "result";
         $this->log(
@@ -101,33 +102,27 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
     {
         $db = Db::getInstance();
         $table = Tools::getValue('payment') == 'creditcard' ? 'pigmbh_paymill_creditcard_userdata' : 'pigmbh_paymill_directdebit_userdata';
-        $data = array();
-        $data['clientId'] = $clientId;
-
-        //change payment only when fastchekout is active
-        if (Configuration::get('PIGMBH_PAYMILL_FASTCHECKOUT') === 'on') {
-            $data['paymentId'] = $paymentId;
-        }
-
+        $this->log("TEST","TEST");
         try {
             $query = "SELECT COUNT(*) FROM $table WHERE clientId='$clientId';";
             $count = (int) $db->getValue($query);
             if ($count === 0) {
                 //insert
-                $this->log("Inserted new data.", var_export($data, true));
-                $data['userId'] = $userId;
+                $this->log("Inserted new data.", var_export(array($clientId, $paymentId, $userId), true));
                 $sql = "INSERT INTO `$table` (`clientId`, `paymentId`, `userId`) VALUES('$clientId', '$paymentId', $userId);";
             } elseif ($count === 1) {
                 //update
-                $this->log("Updated data.", var_export($data, true));
-                $sql = "UPDATE `$table` SET `clientId`='$clientId' WHERE `userId`=$userId";
-                if (isset($data['paymentId'])) {
+                if (Configuration::get('PIGMBH_PAYMILL_FASTCHECKOUT') === 'on') {
+                    $this->log("Updated User $userId.", var_export(array($clientId, $paymentId), true));
                     $sql = "UPDATE `$table` SET `clientId`='$clientId', `paymentId`='$paymentId' WHERE `userId`=$userId";
+                }else{
+                    $this->log("Updated User $userId.", var_export(array($clientId), true));
+                    $sql = "UPDATE `$table` SET `clientId`='$clientId' WHERE `userId`=$userId";
                 }
             }
             $db->execute($sql);
         } catch (Exception $exception) {
-            $this->log("Failed saving UserData. " . $exception->getMessage());
+            $this->log("Failed saving UserData. " , $exception->getMessage());
         }
     }
 

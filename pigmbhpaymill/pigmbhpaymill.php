@@ -1,8 +1,7 @@
 <?php
 
-require_once 'components/configurationHandler.php';
-require_once 'components/models/configurationModel.php';
-
+require_once("components/configurationHandler.php");
+require_once("components/models/configurationModel.php");
 /**
  * PigmbhPaymill
  *
@@ -153,7 +152,7 @@ class PigmbhPaymill extends PaymentModule
             $newConfig->setLogging(Tools::getValue('logging', 'OFF'));
             $newConfig->setPrivateKey(trim(Tools::getValue('privatekey', $oldConfig->getPrivateKey())));
             $newConfig->setPublicKey(trim(Tools::getValue('publickey', $oldConfig->getPublicKey())));
-            $newConfig->setSepa(Tools::getValue('sepa', $oldConfig->getSepa()));
+            $newConfig->setSepa(Tools::getValue('sepa', 'OFF'));
             $this->_configurationHandler->updateConfiguration($newConfig);
         }
 
@@ -255,9 +254,9 @@ class PigmbhPaymill extends PaymentModule
             $newOrderState->invoice = true;
             $newOrderState->paid = true;
             foreach (Language::getLanguages() as $language) {
-                if (strtolower($language['iso_code']) == 'de'){
+                if (strtolower($language['iso_code']) == 'de') {
                     $newOrderState->name[$language['id_lang']] = 'Bezahlung via PAYMILL erfolgreich';
-                }else{
+                } else {
                     $newOrderState->name[$language['id_lang']] = 'Payment via PAYMILL successfully';
                 }
             }

@@ -35,7 +35,7 @@
             $('#paymill_accountholder').after("<p class='error paymillerror'>{l s='Please enter the accountholder' mod='pigmbhpaymill'}</p>");
             result = false;
         }
-        {if !$paymill_sepa}
+        {if $paymill_sepa === 'false'}
         if (!paymill.validateAccountNumber($('#paymill_accountnumber').val())) {
             $('#paymill_accountnumber').after("<p class='error paymillerror'>{l s='Please enter your accountnumber.' mod='pigmbhpaymill'}</p>");
             result = false;
@@ -45,11 +45,11 @@
             result = false;
         }
         {else}
-        if ($('#paymill_iban').val() == "") {
+        if ($('#paymill_iban').val() === "") {
             $('#paymill_iban').after("<p class='error paymillerror'>{l s='Please enter your iban.' mod='pigmbhpaymill'}</p>");
             result = false;
         }
-        if ($('#paymill_bic').val() == "") {
+        if ($('#paymill_bic').val() === "") {
             $('#paymill_bic').after("<p class='error paymillerror'>{l s='Please enter your bic.' mod='pigmbhpaymill'}</p>");
             result = false;
         }
@@ -89,7 +89,7 @@
                                 currency: '{$currency_iso}'
                             }, PaymillResponseHandler);
     {elseif $payment == 'debit'}
-                            {if !$paymill_sepa}
+                            {if $paymill_sepa === 'false'}
                             paymill.createToken({
                                 number: $('#paymill_accountnumber').val(),
                                 bank: $('#paymill_banknumber').val(),
@@ -123,7 +123,7 @@
                 $('#card-number').addClass("paymill-card-number-" + brand);
             }
         });
-        {if $paymill_sepa}
+        {if $paymill_sepa === 'true'}
         $('#paymill_iban').keyup(function() {
             var iban = $('#paymill_iban').val();
             var newIban = "DE";

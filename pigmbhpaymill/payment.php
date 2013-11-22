@@ -63,7 +63,10 @@ if (isset($dbData['clientId'])) {
 $payment = false;
 if (isset($dbData['paymentId'])) {
     $paymentObject = new Services_Paymill_Payments(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
-    $payment = $dbData['paymentId'] !== '' ? $paymentObject->getOne($dbData['paymentId']) : false;
+    $paymentResponse = $paymentObject->getOne($dbData['paymentId']);
+    if($paymentResponse['id'] === $dbData['paymentId']){
+        $payment = $dbData['paymentId'] !== '' ? $paymentResponse : false;
+    }
 }
 $currency = Currency::getCurrency((int) $cart->id_currency);
 $_SESSION['pigmbhPaymill']['authorizedAmount'] = (int) round($cart->getOrderTotal(true, Cart::BOTH) * 100);
@@ -77,10 +80,10 @@ $data = array(
     'displayTotal' => $cart->getOrderTotal(true, Cart::BOTH),
     'this_path_ssl' => Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/pigmbhpaymill/',
     'public_key' => Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'),
-    'paymill_sepa' => Configuration::get('PIGMBH_PAYMILL_SEPA'),
+    'paymill_sepa' => Configuration::get('PIGMBH_PAYMILL_SEPA') == 'on',
     'payment' => Tools::getValue('payment'),
     'paymill_debugging' => Configuration::get('PIGMBH_PAYMILL_DEBUG') == 'on',
-    'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components',
+    'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/',
     'customer' => $customer['firstname'] . " " . $customer['lastname'],
     'prefilledFormData' => $payment,
     'paymill_form_year' => range(date('Y', time('now')), date('Y', time('now')) + 10),
