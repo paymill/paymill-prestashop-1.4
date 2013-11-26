@@ -21,6 +21,12 @@
     transition: all 0.3s;
 }
 
+#paymill_form .center{
+    margin-left: auto;
+    margin-right: auto;
+    width: 340px;
+}
+
 #paymill_form input[type="text"]:focus {
     border-color: #6d7578;
     outline: none;
@@ -80,7 +86,7 @@
 
 .paymillerror{
     font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 9px;
+    font-size: 15px;
 }
 
 .paymill-card-number-visa

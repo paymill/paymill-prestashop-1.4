@@ -10,54 +10,71 @@
     function validate() {
         debug("Paymill handler triggered");
         var result = true;
-        $('.error').remove();
+        var errorMessage;
+        var field = new Array();
+        $(".field-error").removeClass('field-error').animate(300);
     {if $payment == 'creditcard'}
-        if (!paymill.validateHolder($('#paymill-account-holder').val())) {
-            $('#paymill-account-holder').after("<p class='error paymillerror'>{l s='Please enter the creditcardholders name.' mod='pigmbhpaymill'}</p>");
-            result = false;
-        }
-        if (!paymill.validateCardNumber($('#paymill-card-number').val())) {
-            $('#paymill-card-number').after("<p class='error paymillerror'>{l s='Please enter your creditcardnumber.' mod='pigmbhpaymill'}</p>");
-            result = false;
-        }
         if (paymill.cardType($('#paymill-card-number').val()).toLowerCase() === 'maestro' && (!$('#paymill-card-cvc').val() || $('#paymill-card-cvc').val() === "000")) {
             $('#paymill-card-cvc').val('000');
         } else if (!paymill.validateCvc($('#paymill-card-cvc').val())) {
-            $('#paymill-card-cvc').after("<p class='error paymillerror'>{l s='Please enter your CVC-code(back of card).' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter your CVC-code(back of card).' mod='pigmbhpaymill'}';
+            field.push($('#paymill-card-cvc'));
             result = false;
         }
-        if (!paymill.validateExpiry($('#card-expiry-month').val(), $('#card-expiry-year').val())) {
-            $('#card-expiry-year').after("<p class='error paymillerror'>{l s='Please enter a valid date.' mod='pigmbhpaymill'}</p>");
+        if (!paymill.validateHolder($('#paymill-account-holder').val())) {
+            errorMessage = '{l s='Please enter the creditcardholders name.' mod='pigmbhpaymill'}';
+            field.push($('#paymill-account-holder'));
+            result = false;
+        }
+        if (!paymill.validateExpiry($('#paymill-card-expirydate').val().split('/')[0], $('#paymill-card-expirydate').val().split('/')[1])) {
+            errorMessage = '{l s='Please enter a valid date.' mod='pigmbhpaymill'}';
+            field.push($('#paymill-card-expirydate'));
+            result = false;
+        }
+        if (!paymill.validateCardNumber($('#paymill-card-number').val())) {
+            errorMessage = '{l s='Please enter your creditcardnumber.' mod='pigmbhpaymill'}';
+            field.push($('#paymill-card-number'));
             result = false;
         }
     {elseif $payment == 'debit'}
         if (!paymill.validateHolder($('#paymill_accountholder').val())) {
-            $('#paymill_accountholder').after("<p class='error paymillerror'>{l s='Please enter the accountholder' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter the accountholder' mod='pigmbhpaymill'}';
+            field.push($('#paymill_accountholder'));
             result = false;
         }
         {if $paymill_sepa === 'false'}
         if (!paymill.validateAccountNumber($('#paymill_accountnumber').val())) {
-            $('#paymill_accountnumber').after("<p class='error paymillerror'>{l s='Please enter your accountnumber.' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter your accountnumber.' mod='pigmbhpaymill'}';
+            field.push($('#paymill_accountnumber'));
             result = false;
         }
         if (!paymill.validateBankCode($('#paymill_banknumber').val())) {
-            $('#paymill_banknumber').after("<p class='error paymillerror'>{l s='Please enter your bankcode.' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter your bankcode.' mod='pigmbhpaymill'}';
+            field.push($('#paymill_banknumber'));
             result = false;
         }
         {else}
         if ($('#paymill_iban').val() === "") {
-            $('#paymill_iban').after("<p class='error paymillerror'>{l s='Please enter your iban.' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter your iban.' mod='pigmbhpaymill'}';
+            field.push($('#paymill_iban'));
             result = false;
         }
         if ($('#paymill_bic').val() === "") {
-            $('#paymill_bic').after("<p class='error paymillerror'>{l s='Please enter your bic.' mod='pigmbhpaymill'}</p>");
+            errorMessage = '{l s='Please enter your bic.' mod='pigmbhpaymill'}';
+            field.push($('#paymill_bic'));
             result = false;
         }
         {/if}
     {/if}
         if (!result) {
+            for (var i = 0; i < field.length; i++) {
+                field[i].addClass('field-error');
+            }
+            $("#paymill-error").html(errorMessage);
+            $("#paymill-error").show(500);
             $("#submitButton").removeAttr('disabled');
         } else {
+            $("#paymill-error").hide(800);
             debug("Validations successful");
         }
 
@@ -82,8 +99,8 @@
                             paymill.createToken({
                                 number: $('#paymill-card-number').val(),
                                 cardholder: $('#paymill-account-holder').val(),
-                                exp_month: $('#card-expiry-month').val(),
-                                exp_year: $('#card-expiry-year').val(),
+                                exp_month: $('#paymill-card-expirydate').val().split('/')[0],
+                                exp_year: $('#paymill-card-expirydate').val().split('/')[1],
                                 cvc: $('#paymill-card-cvc').val(),
                                 amount_int: {$total},
                                 currency: '{$currency_iso}'
@@ -120,7 +137,7 @@
                 if (brand === 'american express') {
                     brand = 'amex';
                 }
-                $('#paymill-card-number').addClass("paymill-paymill-card-number-" + brand);
+                $('#paymill-card-number').addClass("paymill-card-number-" + brand);
             }
         });
         $('#paymill-card-expirydate').keyup(function() {
@@ -196,13 +213,14 @@
 
     <form id='paymill_form' action="{$this_path_ssl}controllers/front/validation.php" method="post">
         <div class="debit">
+            <input type="hidden" name="payment" value="{$payment}">
+            <div id="paymill-error" class="error center" style="display:none;"></div>
             {if $payment == "creditcard"}
-                <input type="hidden" name="payment" value="creditcard">
                 <fieldset>
                     <label for="paymill-card-number" class="field-left">{l s='Creditcard-number' mod='pigmbhpaymill'}*</label>
                     <input id="paymill-card-number" type="text" class="field-left" value="{if $prefilledFormData.last4}****************{$prefilledFormData.last4}{/if}" />
-                    <label for="paymill-card-expirydate" class="field-right">{l s='Valid until' mod='pigmbhpaymill'}*</label><br>
-                    <input id="paymill-card-expirydate" type="text" class="field-right">
+                    <label for="paymill-card-expirydate" class="field-right">{l s='Valid until' mod='pigmbhpaymill'}*</label>
+                    <input id="paymill-card-expirydate" type="text" class="field-right" value="{if $prefilledFormData.expire_date}{$prefilledFormData.expire_date}{else}MM/YYYY{/if}">
                 </fieldset>
                 <fieldset>
                     <label for="paymill-card-holder" class="field-left">{l s='Cardholder' mod='pigmbhpaymill'}*</label>
@@ -211,7 +229,6 @@
                     <input id="paymill-card-cvc" type="text" class="field-right" value="{if $prefilledFormData.last4}***{/if}" />
                 </fieldset>
             {elseif $payment == "debit"}
-                <input type="hidden" name="payment" value="debit">
                 <fieldset>
                     {if !$paymill_sepa}
                         <label for="paymill_accountnumber" class="field-left">{l s='Accountnumber' mod='pigmbhpaymill'}*</label>

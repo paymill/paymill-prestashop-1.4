@@ -64,8 +64,13 @@ $payment = false;
 if (isset($dbData['paymentId'])) {
     $paymentObject = new Services_Paymill_Payments(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
     $paymentResponse = $paymentObject->getOne($dbData['paymentId']);
-    if($paymentResponse['id'] === $dbData['paymentId']){
+    if ($paymentResponse['id'] === $dbData['paymentId']) {
         $payment = $dbData['paymentId'] !== '' ? $paymentResponse : false;
+    }
+    $payment['expire_date'] = null;
+    if (isset($payment['expire_month'])) {
+        $payment['expire_month'] = $payment['expire_month'] <= 9 ? '0' . $payment['expire_month'] : $payment['expire_month'];
+        $payment['expire_date'] = $payment['expire_month'] . "/" . $payment['expire_year'];
     }
 }
 $currency = Currency::getCurrency((int) $cart->id_currency);
@@ -86,21 +91,6 @@ $data = array(
     'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/',
     'customer' => $customer['firstname'] . " " . $customer['lastname'],
     'prefilledFormData' => $payment,
-    'paymill_form_year' => range(date('Y', time('now')), date('Y', time('now')) + 10),
-    'paymill_form_month' => array(
-        1 => date('F', mktime(0, 0, 0, 1)),
-        2 => date('F', mktime(0, 0, 0, 2)),
-        3 => date('F', mktime(0, 0, 0, 3)),
-        4 => date('F', mktime(0, 0, 0, 4)),
-        5 => date('F', mktime(0, 0, 0, 5)),
-        6 => date('F', mktime(0, 0, 0, 6)),
-        7 => date('F', mktime(0, 0, 0, 7)),
-        8 => date('F', mktime(0, 0, 0, 8)),
-        9 => date('F', mktime(0, 0, 0, 9)),
-        10 => date('F', mktime(0, 0, 0, 10)),
-        11 => date('F', mktime(0, 0, 0, 11)),
-        12 => date('F', mktime(0, 0, 0, 12))
-    )
 );
 
 $smarty->assign($data);
