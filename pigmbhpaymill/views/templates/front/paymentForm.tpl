@@ -21,9 +21,9 @@
             field.push($('#paymill-card-cvc'));
             result = false;
         }
-        if (!paymill.validateHolder($('#paymill-account-holder').val())) {
+        if (!paymill.validateHolder($('#paymill-card-holder').val())) {
             errorMessage = '{l s='Please enter the creditcardholders name.' mod='pigmbhpaymill'}';
-            field.push($('#paymill-account-holder'));
+            field.push($('#paymill-card-holder'));
             result = false;
         }
         if (!paymill.validateExpiry($('#paymill-card-expirydate').val().split('/')[0], $('#paymill-card-expirydate').val().split('/')[1])) {
