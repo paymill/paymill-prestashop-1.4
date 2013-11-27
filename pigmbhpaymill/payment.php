@@ -11,7 +11,6 @@ include(dirname(__FILE__) . '/../../header.php');
 require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/Clients.php';
 require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/Payments.php';
 
-
 global $cart, $smarty;
 $db = Db::getInstance();
 session_start();
@@ -48,7 +47,7 @@ if (Configuration::get('PIGMBH_PAYMILL_FASTCHECKOUT')) {
         $dbData = false;
     }
 }
-if (isset($dbData['clientId'])) {
+if ($dbData && validateClient($dbData['clientId'])) {
     $clientObject = new Services_Paymill_Clients(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
     $oldClient = $clientObject->getOne($dbData['clientId']);
     if ($customer["email"] !== $oldClient['email']) {
@@ -61,7 +60,7 @@ if (isset($dbData['clientId'])) {
 }
 
 $payment = false;
-if (isset($dbData['paymentId'])) {
+if ($dbData && validatePayment($dbData['paymentId'])) {
     $paymentObject = new Services_Paymill_Payments(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
     $paymentResponse = $paymentObject->getOne($dbData['paymentId']);
     if ($paymentResponse['id'] === $dbData['paymentId']) {
@@ -75,7 +74,6 @@ if (isset($dbData['paymentId'])) {
 }
 $currency = Currency::getCurrency((int) $cart->id_currency);
 $_SESSION['pigmbhPaymill']['authorizedAmount'] = (int) round($cart->getOrderTotal(true, Cart::BOTH) * 100);
-
 
 $data = array(
     'nbProducts' => $cart->nbProducts(),
@@ -97,3 +95,20 @@ $smarty->assign($data);
 echo Module::display('pigmbhpaymill', 'views/templates/front/paymentForm.tpl');
 
 include(dirname(__FILE__) . '/../../footer.php');
+
+function validateClient($clientId){
+    $clientObject = new Services_Paymill_Clients(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
+    return  validatePaymillId($clientObject, $clientId);
+}
+function validatePayment($paymentId){
+    $paymentObject = new Services_Paymill_Payments(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
+    return validatePaymillId($paymentObject, $paymentId);
+}
+function validatePaymillId($object, $id){
+    $isValid = false;    
+    $objectResult = $object->getOne($id);
+    if(array_key_exists('id', $objectResult)){
+        $isValid = $id === $objectResult['id'];
+    }
+    return $isValid;
+}

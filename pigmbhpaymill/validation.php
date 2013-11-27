@@ -30,7 +30,6 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             $validPayments[] = 'creditcard';
         }
 
-        $this->paramName = "start_process";
         if (empty($token)) {
             $this->log('No paymill token was provided. Redirect to payments page.', null);
             Tools::redirect('order.php?step=1&paymillerror=1&paymillpayment=' . $payment);
