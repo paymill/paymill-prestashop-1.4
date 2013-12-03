@@ -47,7 +47,7 @@ class PigmbhPaymill extends PaymentModule
      */
     public function install()
     {
-        return parent::install() && $this->registerHook('payment') && $this->registerHook('paymentReturn') && $this->_configurationHandler->setDefaultConfiguration() && $this->createDatabaseTables() && $this->_addPaymillOrderState();
+        return parent::install() && $this->registerHook('payment') && $this->registerHook('paymentReturn') && $this->registerHook('paymentTop') && $this->_configurationHandler->setDefaultConfiguration() && $this->createDatabaseTables() && $this->_addPaymillOrderState();
     }
 
     /**
@@ -58,7 +58,7 @@ class PigmbhPaymill extends PaymentModule
     public function uninstall()
     {
         Configuration::deleteByName('PIGMBH_PAYMILL_ORDERSTATE', null);
-        return $this->unregisterHook('payment') && $this->unregisterHook('paymentReturn') && parent::uninstall();
+        return $this->unregisterHook('payment') && $this->unregisterHook('paymentReturn') && $this->unregisterHook('paymentTop') && parent::uninstall();
     }
 
     /**
@@ -78,8 +78,22 @@ class PigmbhPaymill extends PaymentModule
             'debit' => Configuration::get('PIGMBH_PAYMILL_DEBIT'),
             'creditcard' => Configuration::get('PIGMBH_PAYMILL_CREDITCARD'),
             'valid_key' => !in_array(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), array('', null)) && !in_array(Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'), array('', null)),
-            'paymillerror' => Tools::getValue('paymillerror') == 1 ? $this->l('Payment could not be processed.') : null,
-            'paymillpayment' => Tools::getValue('paymillpayment')
+        ));
+        return $this->display(__FILE__, 'views/templates/hook/payment.tpl');
+    }
+
+    /**
+     *
+     * @param type $params
+     * @return type
+     */
+    public function hookPaymentTop($params)
+    {
+        if (!$this->active) {
+            return;
+        }
+        $this->smarty->assign(array(ay(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), array('', null)) && !in_array(Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'), array('', null)),
+            'paymillerror' => Tools::getValue('paymillerror') == 1 ? $this->l('Payment could not be processed.') : null
         ));
         return $this->display(__FILE__, 'views/templates/hook/payment.tpl');
     }
