@@ -132,7 +132,7 @@
         $('#paymill-card-number').keyup(function() {
             var brand = paymill.cardType($('#paymill-card-number').val());
             brand = brand.toLowerCase();
-            $("#paymill-card-number")[0].className = $("#paymill-card-number")[0].className.replace(/paymill-paymill-card-number-.*/g, '');
+            $("#paymill-card-number")[0].className = $("#paymill-card-number")[0].className.replace(/paymill-card-number-.*/g, '');
             if (brand !== 'unknown') {
                 if (brand === 'american express') {
                     brand = 'amex';
@@ -175,8 +175,9 @@
         debug("Started Paymill response handler");
         if (error) {
             $("#submitButton").removeAttr('disabled');
-            debug("API returned error:" + error.apierror);
-            alert("API returned error:" + error.apierror);
+            debug("API returned error(RAW): " + error.apierror);
+            debug("API returned error: " + getErrorMessage(error.apierror));
+            alert("API returned error: " + getErrorMessage(error.apierror));
             submitted = false;
         } else {
             debug("Received token from Paymill API: " + result.token);
@@ -196,7 +197,70 @@
         {/if}
     {/if}
     }
-
+    function getErrorMessage(code) {
+        var errormessage = '{l s='Unknown Error' mod='pigmbhpaymill'}';
+        switch (code) {
+            case "internal_server_error":
+                errormessage = '{l s='Communication with PSP failed' mod='pigmbhpaymill'}';
+                break;
+            case "invalid_public_key":
+                errormessage = '{l s='Public Key is invalid' mod='pigmbhpaymill'}';
+                break;
+            case "invalid_payment_data":
+                errormessage = '{l s='Payment mode, card type, currency or country not accepted.' mod='pigmbhpaymill'}';
+                break;
+            case "3ds_cancelled":
+                errormessage = '{l s='3-D Secure process has been aborted' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_number":
+                errormessage = '{l s='Invalid or missing card number' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_exp_year":
+                errormessage = '{l s='Invalid or missing expiry year' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_exp_month":
+                errormessage = '{l s='Invalid or missing expiry month' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_exp":
+                errormessage = '{l s='Card no longer (or not yet) valid' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_cvc":
+                errormessage = '{l s='Invalid CVC' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_card_holder":
+                errormessage = '{l s='Invalid card holder' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_amount_int":
+            case "field_invalid_amount":
+                errormessage = '{l s='Invalid or missing amount for 3-D Secure' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_currency":
+                errormessage = '{l s='Invalid or missing currency for 3-D Secure' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_account_number":
+                errormessage = '{l s='Invalid or missing account number' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_account_holder":
+                errormessage = '{l s='Invalid or missing account holder' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_bank_code":
+                errormessage = '{l s='Invalid or missing bank code' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_iban":
+                errormessage = '{l s='Invalid or missing IBAN' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_bic":
+                errormessage = '{l s='Invalid or missing BIC' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_country":
+                errormessage = '{l s='Missing or not supported country' mod='pigmbhpaymill'}';
+                break;
+            case "field_invalid_bank_data":
+                errormessage = '{l s='Bank data does not match' mod='pigmbhpaymill'}';
+                break;
+        }
+        return errormessage;
+    }
 </script>
 
 {capture name=path}{l s='Paymill' mod='pigmbhpaymill'}{/capture}
