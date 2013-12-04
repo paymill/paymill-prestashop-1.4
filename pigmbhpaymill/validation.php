@@ -65,21 +65,23 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             $paymentProcessor->setPaymentId(!empty($userData['paymentId']) ? $userData['paymentId'] : null);
         }
         $result = $paymentProcessor->processPayment();
-        $this->paramName = "result";
         $this->log(
             'Payment processing resulted in'
             , ($result ? 'Success' : 'Fail')
         );
+
+        $paymill = new PigmbhPaymill();
         // finish the order if payment was sucessfully processed
         if ($result === true) {
-            $paymill = new PigmbhPaymill();
             $user = new Customer((int) $cart->id_customer);
             $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), $cart->id_customer);
             $paymill->validateOrder(
                 (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $user->secure_key);
             Tools::redirect('order-confirmation.php?key=' . $user->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
         } else {
-            Tools::redirect('order.php?step=3&paymillerror=1&paymillpayment=' . $payment);
+            $errorMessage = $paymill->errorCodeMapping($paymentProcessor->getErrorCode());
+            $this->log('ErrorCode', $errorMessage);
+            Tools::redirect('order.php?step=3&paymillerror=1&errorCode='. $paymentProcessor->getErrorCode());
         }
     }
 
@@ -101,7 +103,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
     {
         $db = Db::getInstance();
         $table = Tools::getValue('payment') == 'creditcard' ? 'pigmbh_paymill_creditcard_userdata' : 'pigmbh_paymill_directdebit_userdata';
-        $this->log("TEST","TEST");
+        $this->log("TEST", "TEST");
         try {
             $query = "SELECT COUNT(*) FROM $table WHERE clientId='$clientId';";
             $count = (int) $db->getValue($query);
@@ -114,14 +116,14 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
                 if (Configuration::get('PIGMBH_PAYMILL_FASTCHECKOUT') === 'on') {
                     $this->log("Updated User $userId.", var_export(array($clientId, $paymentId), true));
                     $sql = "UPDATE `$table` SET `clientId`='$clientId', `paymentId`='$paymentId' WHERE `userId`=$userId";
-                }else{
+                } else {
                     $this->log("Updated User $userId.", var_export(array($clientId), true));
                     $sql = "UPDATE `$table` SET `clientId`='$clientId' WHERE `userId`=$userId";
                 }
             }
             $db->execute($sql);
         } catch (Exception $exception) {
-            $this->log("Failed saving UserData. " , $exception->getMessage());
+            $this->log("Failed saving UserData. ", $exception->getMessage());
         }
     }
 

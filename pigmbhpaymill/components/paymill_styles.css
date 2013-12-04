@@ -84,9 +84,19 @@
     background: #636363;
 }
 
-.paymillerror{
-    font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 15px;
+.paymill_error{
+    color: #000;
+    background: #F8E2E2;
+    border: 1px solid #FF1B1B;
+    border-radius: 4px;
+    padding: 0.5em;
+    margin: 0.3em auto 1.5em auto;
+    box-shadow: inset 0 2px 2px #dde2e4;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    -ms-transition: all 0.3s;
+    -o-transition: all 0.3s;
+    transition: all 0.3s;
 }
 
 .paymill-card-number-visa

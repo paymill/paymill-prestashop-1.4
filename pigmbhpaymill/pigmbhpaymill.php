@@ -89,13 +89,15 @@ class PigmbhPaymill extends PaymentModule
      */
     public function hookPaymentTop($params)
     {
-        if (!$this->active) {
+        if (!$this->active && Tools::getValue('paymillerror') != 1) {
             return;
         }
-        $this->smarty->assign(array(ay(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), array('', null)) && !in_array(Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'), array('', null)),
-            'paymillerror' => Tools::getValue('paymillerror') == 1 ? $this->l('Payment could not be processed.') : null
+        $this->smarty->assign(array(
+            'paymillerror' => Tools::getValue('paymillerror') == 1 ? $this->l('Payment could not be processed.') : null,
+            'errormessage' => $this->errorCodeMapping(Tools::getValue('errorCode')),
+            'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/'
         ));
-        return $this->display(__FILE__, 'views/templates/hook/payment.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/error.tpl');
     }
 
     public function hookPaymentReturn($params)
@@ -283,6 +285,50 @@ class PigmbhPaymill extends PaymentModule
             Configuration::updateValue('PIGMBH_PAYMILL_ORDERSTATE', (int) $newOrderState->id);
         }
         return true;
+    }
+
+    public function errorCodeMapping($code)
+    {
+        $errorMessages = array(
+            '10001' => $this->l('General undefined response.'),
+            '10002' => $this->l('Still waiting on something.'),
+            '20000' => $this->l('General success response.'),
+            '40000' => $this->l('General problem with data.'),
+            '40001' => $this->l('General problem with payment data.'),
+            '40100' => $this->l('Problem with credit card data.'),
+            '40101' => $this->l('Problem with cvv.'),
+            '40102' => $this->l('Card expired or not yet valid.'),
+            '40103' => $this->l('Limit exceeded.'),
+            '40104' => $this->l('Card invalid.'),
+            '40105' => $this->l('Expiry date not valid.'),
+            '40106' => $this->l('Credit card brand required.'),
+            '40200' => $this->l('Problem with bank account data.'),
+            '40201' => $this->l('Bank account data combination mismatch.'),
+            '40202' => $this->l('User authentication failed.'),
+            '40300' => $this->l('Problem with 3d secure data.'),
+            '40301' => $this->l('Currency / amount mismatch'),
+            '40400' => $this->l('Problem with input data.'),
+            '40401' => $this->l('Amount too low or zero.'),
+            '40402' => $this->l('Usage field too long.'),
+            '40403' => $this->l('Currency not allowed.'),
+            '50000' => $this->l('General problem with backend.'),
+            '50001' => $this->l('Country blacklisted.'),
+            '50100' => $this->l('Technical error with credit card.'),
+            '50101' => $this->l('Error limit exceeded.'),
+            '50102' => $this->l('Card declined by authorization system.'),
+            '50103' => $this->l('Manipulation or stolen card.'),
+            '50104' => $this->l('Card restricted.'),
+            '50105' => $this->l('Invalid card configuration data.'),
+            '50200' => $this->l('Technical error with bank account.'),
+            '50201' => $this->l('Card blacklisted.'),
+            '50300' => $this->l('Technical error with 3D secure.'),
+            '50400' => $this->l('Decline because of risk issues.'),
+            '50500' => $this->l('General timeout.'),
+            '50501' => $this->l('Timeout on side of the acquirer.'),
+            '50502' => $this->l('Risk management transaction timeout.'),
+            '50600' => $this->l('Duplicate transaction.')
+        );
+        return array_key_exists($code, $errorMessages) ? $errorMessages[$code] : '';
     }
 
 }
