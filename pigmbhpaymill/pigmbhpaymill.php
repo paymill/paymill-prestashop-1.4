@@ -2,6 +2,8 @@
 
 require_once("components/configurationHandler.php");
 require_once("components/models/configurationModel.php");
+require_once("paymill/v2/lib/Services/Paymill/Webhooks.php");
+
 /**
  * PigmbhPaymill
  *
@@ -40,6 +42,15 @@ class PigmbhPaymill extends PaymentModule
         $this->description = $this->l('Payment via Paymill.');
     }
 
+    public function validateOrder($id_cart, $id_order_state, $amountPaid, $paymentMethod = 'Unknown', $message = NULL, $extraVars = array(), $currency_special = NULL, $dont_touch_amount = false, $secure_key = false){
+        $returnValue = null;
+        if(parent::validateOrder($id_cart, $id_order_state, $amountPaid, $paymentMethod = 'Unknown', $message = NULL, $extraVars = array(), $currency_special = NULL, $dont_touch_amount = false, $secure_key = false)){
+            $returnValue = $this->currentOrder;
+        }
+        return $returnValue;
+    }
+
+
     /**
      * This function installs the Module
      *
@@ -60,6 +71,19 @@ class PigmbhPaymill extends PaymentModule
         Configuration::deleteByName('PIGMBH_PAYMILL_ORDERSTATE', null);
         return $this->unregisterHook('payment') && $this->unregisterHook('paymentReturn') && $this->unregisterHook('paymentTop') && parent::uninstall();
     }
+
+    private function registerPaymillWebhook($privateKey){
+        $webHook = new Services_Paymill_Webhooks($privateKey,"https://api.paymill.com/v2/");
+        return $webHook->create(array(
+            'url' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/webHookEndpoint.php',
+            'event_types' => array('refund.succeeded')
+        ));
+    }
+
+    private function unregisterPaymillWebhook(){
+
+    }
+
 
     /**
      *
@@ -170,6 +194,7 @@ class PigmbhPaymill extends PaymentModule
             $newConfig->setPublicKey(trim(Tools::getValue('publickey', $oldConfig->getPublicKey())));
             $newConfig->setSepa(Tools::getValue('sepa', 'OFF'));
             $this->_configurationHandler->updateConfiguration($newConfig);
+            $this->registerPaymillWebhook($newConfig->getPrivateKey());
         }
 
         //logging
@@ -328,7 +353,12 @@ class PigmbhPaymill extends PaymentModule
             '50502' => $this->l('Risk management transaction timeout.'),
             '50600' => $this->l('Duplicate transaction.')
         );
-        return array_key_exists($code, $errorMessages) ? $errorMessages[$code] : '';
+        if(is_null($code)){
+            return array_key_exists($code, $errorMessages) ? $errorMessages[$code] : 'Unknown Error';
+        }else{
+            return 'Unknown Error';
+        }
+
     }
 
 }

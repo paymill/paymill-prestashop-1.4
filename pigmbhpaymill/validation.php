@@ -2,6 +2,7 @@
 
 require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/PaymentProcessor.php';
 require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/LoggingInterface.php';
+require_once dirname(__FILE__) . '/paymill/v2/lib/Services/Paymill/Transactions.php';
 require_once dirname(__FILE__) . '/pigmbhpaymill.php';
 
 /**
@@ -51,7 +52,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         $paymentProcessor->setCurrency(strtolower($iso_currency));
         $paymentProcessor->setName($user["lastname"] . ', ' . $user["firstname"]);
         $paymentProcessor->setEmail($user["email"]);
-        $paymentProcessor->setDescription($shopname . ' ' . $user["email"]);
+        $paymentProcessor->setDescription(" ");
         $paymentProcessor->setLogger($this);
         $paymentProcessor->setSource(Configuration::get('PIGMBH_PAYMILL_VERSION') . "_prestashop_" . _PS_VERSION_);
         if ($payment == 'creditcard') {
@@ -73,11 +74,12 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         $paymill = new PigmbhPaymill();
         // finish the order if payment was sucessfully processed
         if ($result === true) {
-            $user = new Customer((int) $cart->id_customer);
+            $customer = new Customer((int) $cart->id_customer);
             $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), $cart->id_customer);
-            $paymill->validateOrder(
-                (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $user->secure_key);
-            Tools::redirect('order-confirmation.php?key=' . $user->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
+            $orderID = $paymill->validateOrder(
+                (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $customer->secure_key);
+            $this->updatePaymillTransaction($paymentProcessor->getTransactionId(), 'OrderID: ' . $orderID . ' - Name:' . $user["lastname"] . ', ' . $user["firstname"]);
+            Tools::redirect('order-confirmation.php?key=' . $customer->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
         } else {
             $errorMessage = $paymill->errorCodeMapping($paymentProcessor->getErrorCode());
             $this->log('ErrorCode', $errorMessage);
@@ -103,7 +105,6 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
     {
         $db = Db::getInstance();
         $table = Tools::getValue('payment') == 'creditcard' ? 'pigmbh_paymill_creditcard_userdata' : 'pigmbh_paymill_directdebit_userdata';
-        $this->log("TEST", "TEST");
         try {
             $query = "SELECT COUNT(*) FROM $table WHERE clientId='$clientId';";
             $count = (int) $db->getValue($query);
@@ -125,6 +126,14 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         } catch (Exception $exception) {
             $this->log("Failed saving UserData. ", $exception->getMessage());
         }
+    }
+
+    private function updatePaymillTransaction($transactionID, $description){
+        $transactionObject = new Services_Paymill_Transactions(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'),"https://api.paymill.com/v2/");
+        $transactionObject->update(array(
+            'id' => $transactionID,
+            'description' => $description
+        ));
     }
 
 }

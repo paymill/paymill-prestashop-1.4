@@ -42,7 +42,7 @@
             field.push($('#paymill_accountholder'));
             result = false;
         }
-        {if $paymill_sepa === 'false'}
+        {if !$paymill_sepa}
         if (!paymill.validateAccountNumber($('#paymill_accountnumber').val())) {
             errorMessage = '{l s='Please enter your accountnumber.' mod='pigmbhpaymill'}';
             field.push($('#paymill_accountnumber'));
@@ -106,7 +106,7 @@
                                 currency: '{$currency_iso}'
                             }, PaymillResponseHandler);
     {elseif $payment == 'debit'}
-        {if $paymill_sepa === 'false'}
+        {if !$paymill_sepa}
                             paymill.createToken({
                                 number: $('#paymill_accountnumber').val(),
                                 bank: $('#paymill_banknumber').val(),
