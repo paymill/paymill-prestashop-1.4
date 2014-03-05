@@ -6,6 +6,7 @@
     var submitted = false;
 </script>
 <script type="text/javascript" src="https://bridge.paymill.com/"></script>
+<script type="text/javascript" src="views/templates/front/Iban.js"></script>
 <script type="text/javascript">
     function validate() {
         debug("Paymill handler triggered");
@@ -54,7 +55,8 @@
             result = false;
         }
         {else}
-        if ($('#paymill_iban').val() === "") {
+        var iban = new Iban();
+        if (!iban.validate($('#paymill_iban').val())) {
             errorMessage = '{l s='Please enter your iban.' mod='pigmbhpaymill'}';
             field.push($('#paymill_iban'));
             result = false;
