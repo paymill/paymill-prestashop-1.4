@@ -61,8 +61,8 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             $userData = $db->getRow('SELECT `clientId`,`paymentId` FROM `pigmbh_paymill_directdebit_userdata` WHERE `userId`=' . $user["id_customer"]);
         }
 
+        $paymentProcessor->setClientId(!empty($userData['clientId']) ? $userData['clientId'] : null);
         if ($token === "dummyToken") {
-            $paymentProcessor->setClientId(!empty($userData['clientId']) ? $userData['clientId'] : null);
             $paymentProcessor->setPaymentId(!empty($userData['paymentId']) ? $userData['paymentId'] : null);
         }
         $result = $paymentProcessor->processPayment();
@@ -75,7 +75,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         // finish the order if payment was sucessfully processed
         if ($result === true) {
             $customer = new Customer((int) $cart->id_customer);
-            $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), $cart->id_customer);
+            $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), (int) $cart->id_customer);
             $orderID = $paymill->validateOrder(
                 (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $customer->secure_key);
             $this->updatePaymillTransaction($paymentProcessor->getTransactionId(), 'OrderID: ' . $orderID . ' - Name:' . $user["lastname"] . ', ' . $user["firstname"]);
@@ -83,7 +83,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         } else {
             $errorMessage = $paymill->errorCodeMapping($paymentProcessor->getErrorCode());
             $this->log('ErrorCode', $errorMessage);
-            Tools::redirect('order.php?step=3&paymillerror=1&errorCode='. $paymentProcessor->getErrorCode());
+            Tools::redirect('order.php?step=3&paymillerror=1&errorCode=' . $paymentProcessor->getErrorCode());
         }
     }
 
@@ -91,12 +91,15 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
     {
         $db = Db::getInstance();
         if (Configuration::get('PIGMBH_PAYMILL_LOGGING') === 'on') {
-            $identifier = $_SESSION["log_id"];
+            $identifier = mysql_real_escape_string($_SESSION["log_id"]);
+            $debugInfo = mysql_real_escape_string($debugInfo);
+            $message = mysql_real_escape_string($message);
             $sql = "INSERT INTO `pigmbh_paymill_logging` (`identifier`,`debug`, `message`) VALUES('$identifier', '$debugInfo','$message')";
             try {
                 $db->execute($sql);
             } catch (exception $e) {
                 print_r($e);
+                exit;
             }
         }
     }
@@ -106,8 +109,9 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         $db = Db::getInstance();
         $table = Tools::getValue('payment') == 'creditcard' ? 'pigmbh_paymill_creditcard_userdata' : 'pigmbh_paymill_directdebit_userdata';
         try {
-            $query = "SELECT COUNT(*) FROM $table WHERE clientId='$clientId';";
-            $count = (int) $db->getValue($query);
+            $query = 'SELECT COUNT(*) as `count` FROM '.$table.' WHERE clientId="' . $clientId . '";';
+            $count = $db->executeS($query,true);
+            $count = (int)$count[0]['count'];
             if ($count === 0) {
                 //insert
                 $this->log("Inserted new data.", var_export(array($clientId, $paymentId, $userId), true));
@@ -128,8 +132,9 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         }
     }
 
-    private function updatePaymillTransaction($transactionID, $description){
-        $transactionObject = new Services_Paymill_Transactions(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'),"https://api.paymill.com/v2/");
+    private function updatePaymillTransaction($transactionID, $description)
+    {
+        $transactionObject = new Services_Paymill_Transactions(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
         $transactionObject->update(array(
             'id' => $transactionID,
             'description' => $description
