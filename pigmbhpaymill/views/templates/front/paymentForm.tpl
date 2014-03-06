@@ -255,7 +255,7 @@
     {/if}
     }
     function getErrorMessage(code) {
-        var errormessage = '{l s='Unknown Error' mod='pigmbhpaymill'}';
+        var errormessage = '{l s='Unknown Error' mod='pigmbhpaymill'|unescape}';
         switch (code) {
             case "internal_server_error":
                 errormessage = '{l s='Communication with PSP failed' mod='pigmbhpaymill'}';
@@ -316,7 +316,7 @@
                 errormessage = '{l s='Bank data does not match' mod='pigmbhpaymill'}';
                 break;
         }
-        return errormessage;
+        return $("<div/>").html(errormessage).text(); //avoiding problem with special chars
     }
 </script>
 
