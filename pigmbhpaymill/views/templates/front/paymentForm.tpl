@@ -7,6 +7,7 @@
 </script>
 <script type="text/javascript" src="https://bridge.paymill.com/"></script>
 <script type="text/javascript" src="views/templates/front/Iban.js"></script>
+<script type="text/javascript" src="views/templates/front/BrandDetection.js"></script>
 <script type="text/javascript">
     function validate() {
         debug("Paymill handler triggered");
@@ -134,23 +135,12 @@
         $('#paymill-card-number').keyup(function() {
             // clear img
             $("#paymill-card-number")[0].className = $("#paymill-card-number")[0].className.replace(/paymill-card-number-.*/g, '');
-
             var cardnumber = $('#paymill-card-number').val();
-            var brand = paymill.cardType(cardnumber);
-            var gray = false;
-            brand = brand.toLowerCase();
-
-            if (brand === 'unknown') {
-                brand = detectCreditcardBranding(cardnumber);
-                gray = true;
-            }
-
+            var detector = new BrandDetection();
+            var brand = detector.detect(cardnumber);
             if (brand !== 'unknown') {
-                if (brand === 'american express') {
-                    brand = 'amex';
-                }
                 $('#paymill-card-number').addClass("paymill-card-number-" + brand);
-                if (gray) {
+                if (!detector.validate(cardnumber)) {
                     $('#paymill-card-number').addClass("paymill-card-number-grayscale");
                 }
             }
