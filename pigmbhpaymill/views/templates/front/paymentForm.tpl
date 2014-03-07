@@ -255,7 +255,7 @@
     {/if}
     }
     function getErrorMessage(code) {
-        var errormessage = '{l s='Unknown Error' mod='pigmbhpaymill'|unescape}';
+        var errormessage = '{l s='Unknown Error' mod='pigmbhpaymill'}';
         switch (code) {
             case "internal_server_error":
                 errormessage = '{l s='Communication with PSP failed' mod='pigmbhpaymill'}';
