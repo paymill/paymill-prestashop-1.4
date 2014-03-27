@@ -170,7 +170,7 @@
     });
 
     function getFormData(array, ignoreEmptyValues) {
-        $('#paymill_form :input').not(':hidden').each(function() {
+        $('#paymill_form :input:text').each(function() {
             if ($(this).val() === "" && ignoreEmptyValues) {
                 return;
             }
