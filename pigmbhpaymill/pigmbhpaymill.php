@@ -1,8 +1,8 @@
 <?php
 
-require_once("components/configurationHandler.php");
-require_once("components/models/configurationModel.php");
-require_once("paymill/v2/lib/Services/Paymill/Webhooks.php");
+require_once(_PS_ROOT_DIR_ . "/modules/pigmbhpaymill/components/configurationHandler.php");
+require_once(_PS_ROOT_DIR_ . "/modules/pigmbhpaymill/components/models/configurationModel.php");
+require_once(_PS_ROOT_DIR_ . "/modules/pigmbhpaymill/paymill/v2/lib/Services/Paymill/Webhooks.php");
 
 /**
  * PigmbhPaymill
@@ -10,8 +10,9 @@ require_once("paymill/v2/lib/Services/Paymill/Webhooks.php");
  * @category   PayIntelligent
  * @copyright  Copyright (c) 2013 PayIntelligent GmbH (http://payintelligent.de)
  */
-if (!defined('_PS_VERSION_'))
+if (!defined('_PS_VERSION_')) {
     exit;
+}
 
 class PigmbhPaymill extends PaymentModule
 {
@@ -55,7 +56,7 @@ class PigmbhPaymill extends PaymentModule
     {
         $result = Db::getInstance()->executeS('SELECT `id_order_state` FROM `ps_order_state_lang` WHERE `template` = "refund" GROUP BY `template`;');
         $sql = 'INSERT INTO `' . _DB_PREFIX_ . 'order_history` (`id_employee`,`id_order`,`id_order_state`,`date_add`) VALUES (0,%d, %d, NOW());';
-        $orderStateId = (int)$result[0]['id_order_state'];
+        $orderStateId = (int) $result[0]['id_order_state'];
         $secureSql = sprintf($sql, $orderId, $orderStateId);
         Db::getInstance()->execute($secureSql);
     }
