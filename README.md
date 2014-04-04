@@ -1,7 +1,7 @@
 PAYMILL-Prestashop Extension for credit card and direct debit payments
 ==================
 
-PAYMILL extension for Prestashop compatible with: 1.4.8.2 and newer (tested for 1.4.8.2 and 1.4.11.0). This extension installs two payment methods: Credit card and direct debit.
+PAYMILL extension for Prestashop compatible with: 1.4+ (tested for 1.4.8.2 and 1.4.11.0). This extension installs two payment methods: Credit card and direct debit.
 
 ## Your Advantages
 * PCI DSS compatibility
