@@ -86,8 +86,8 @@ class PigmbhPaymill extends PaymentModule
     {
         $webHook = new Services_Paymill_Webhooks($privateKey, "https://api.paymill.com/v2/");
         return $webHook->create(array(
-                'url' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/webHookEndpoint.php',
-                'event_types' => array('refund.succeeded')
+                    'url' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/webHookEndpoint.php',
+                    'event_types' => array('refund.succeeded')
         ));
     }
 
@@ -142,26 +142,26 @@ class PigmbhPaymill extends PaymentModule
     public function createDatabaseTables()
     {
         $sqlLog = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_logging` ("
-            . "`id` int(11) NOT NULL AUTO_INCREMENT,"
-            . "`identifier` text NOT NULL,"
-            . "`debug` text NOT NULL,"
-            . "`message` text NOT NULL,"
-            . "`date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-            . "PRIMARY KEY (`id`)"
-            . ") AUTO_INCREMENT=1";
+                . "`id` int(11) NOT NULL AUTO_INCREMENT,"
+                . "`identifier` text NOT NULL,"
+                . "`debug` text NOT NULL,"
+                . "`message` text NOT NULL,"
+                . "`date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                . "PRIMARY KEY (`id`)"
+                . ") AUTO_INCREMENT=1";
 
         $sqlDebit = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_directdebit_userdata` ( "
-            . "`userId` int(11) NOT NULL, "
-            . "`clientId` text NOT NULL, "
-            . "`paymentId` text NOT NULL, "
-            . "PRIMARY KEY (`userId`) "
-            . ");";
+                . "`userId` int(11) NOT NULL, "
+                . "`clientId` text NOT NULL, "
+                . "`paymentId` text NOT NULL, "
+                . "PRIMARY KEY (`userId`) "
+                . ");";
         $sqlCreditCard = "CREATE TABLE IF NOT EXISTS `pigmbh_paymill_creditcard_userdata` ( "
-            . "`userId` int(11) NOT NULL, "
-            . "`clientId` text NOT NULL, "
-            . "`paymentId` text NOT NULL, "
-            . "PRIMARY KEY (`userId`) "
-            . ");";
+                . "`userId` int(11) NOT NULL, "
+                . "`clientId` text NOT NULL, "
+                . "`paymentId` text NOT NULL, "
+                . "PRIMARY KEY (`userId`) "
+                . ");";
         $db = Db::getInstance();
         try {
             $db->execute($sqlLog);
@@ -258,24 +258,24 @@ class PigmbhPaymill extends PaymentModule
         return
             '<link rel="stylesheet" type="text/css" href="' . _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/paymill_styles.css">
             <form action="' . Tools::htmlentitiesUTF8($_SERVER['REQUEST_URI']) . '" method="post">
-			<fieldset class="paymill_center">
-			<legend>' . $this->displayName . '</legend>
-				<table cellpadding="0" cellspacing="0">
-                    <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_payments') . '</td></tr>
-                    <tr><td class="paymill_config_label">' . $this->l('Activate creditcard-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="creditcard" ' . $this->getCheckboxState($configurationModel->getCreditcard()) . ' /></td></tr>
-                    <tr><td class="paymill_config_label">' . $this->l('Activate debit-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="debit" ' . $this->getCheckboxState($configurationModel->getDirectdebit()) . ' /></td></tr>
-                    <tr><td colspan="2" style="height: 15px;"></td></tr>
-                    <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_main') . '</td></tr>
-                    <tr><td class="paymill_config_label">' . $this->l('Private Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="privatekey" value="' . $configurationModel->getPrivateKey() . '" /></td></tr>
-                    <tr><td class="paymill_config_label">' . $this->l('Public Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="publickey" value="' . $configurationModel->getPublicKey() . '" /></td></tr>
-					<tr><td class="paymill_config_label">' . $this->l('Activate debugging') . '</td><td class="paymill_config_value"><input type="checkbox" name="debug" ' . $this->getCheckboxState($configurationModel->getDebug()) . ' /></td></tr>
-					<tr><td class="paymill_config_label">' . $this->l('Activate logging') . '</td><td class="paymill_config_value"><input type="checkbox" name="logging" ' . $this->getCheckboxState($configurationModel->getLogging()) . ' /></td></tr>
-                    <tr><td class="paymill_config_label">' . $this->l('Activate fastCheckout') . '</td><td class="paymill_config_value"><input type="checkbox" name="fastcheckout" ' . $this->getCheckboxState($configurationModel->getFastcheckout()) . ' /></td></tr>
-                    <tr><td class="paymill_config_label">SEPA</td><td class="paymill_config_value"><input type="checkbox" name="sepa" ' . $this->getCheckboxState($configurationModel->getSepa()) . ' /></td></tr>
-                    <tr><td colspan="2" align="center"><input class="button" name="btnSubmit" value="' . $this->l('Save') . '" type="submit" /></td></tr>
-				</table>
-			</fieldset>
-		</form>';
+                <fieldset class="paymill_center">
+                    <legend>' . $this->displayName . '</legend>
+                    <table cellpadding="0" cellspacing="0">
+                        <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_payments') . '</td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Activate creditcard-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="creditcard" ' . $this->getCheckboxState($configurationModel->getCreditcard()) . ' /></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Activate debit-payment') . '</td><td class="paymill_config_value"><input type="checkbox" name="debit" ' . $this->getCheckboxState($configurationModel->getDirectdebit()) . ' /></td></tr>
+                        <tr><td colspan="2" style="height: 15px;"></td></tr>
+                        <tr><td colspan="2" class="paymill_config_header">' . $this->l('config_main') . '</td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Private Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="privatekey" value="' . $configurationModel->getPrivateKey() . '" /></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Public Key') . '</td><td class="paymill_config_value"><input type="text" class="paymill_config_text" name="publickey" value="' . $configurationModel->getPublicKey() . '" /></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Activate debugging') . '</td><td class="paymill_config_value"><input type="checkbox" name="debug" ' . $this->getCheckboxState($configurationModel->getDebug()) . ' /></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Activate logging') . '</td><td class="paymill_config_value"><input type="checkbox" name="logging" ' . $this->getCheckboxState($configurationModel->getLogging()) . ' /></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Activate fastCheckout') . '</td><td class="paymill_config_value"><input type="checkbox" name="fastcheckout" ' . $this->getCheckboxState($configurationModel->getFastcheckout()) . ' /></td></tr>
+                        <tr><td class="paymill_config_label">SEPA</td><td class="paymill_config_value"><input type="checkbox" name="sepa" ' . $this->getCheckboxState($configurationModel->getSepa()) . ' /></td></tr>
+                        <tr><td colspan="2" align="center"><input class="button" name="btnSubmit" value="' . $this->l('Save') . '" type="submit" /></td></tr>
+                    </table>
+                </fieldset>
+            </form>';
     }
 
     private function getCheckboxState($value)

@@ -1,4 +1,5 @@
 <?php
+
 global $_MODULE;
 $_MODULE = array();
 $_MODULE["<{pigmbhpaymill}prestashop>pigmbhpaymill_1ef3e269a9500231415bd231bb29ecf6"] = "Pagamentos por cartão de crédito e débito direto PAYMILL";

@@ -54,7 +54,7 @@ if ($dbData && validateClient($dbData['clientId'])) {
         $clientObject->update(array(
             'id' => $dbData['clientId'],
             'email' => $customer["email"]
-            )
+                )
         );
     }
 }
@@ -96,18 +96,23 @@ echo Module::display('pigmbhpaymill', 'views/templates/front/paymentForm.tpl');
 
 include(dirname(__FILE__) . '/../../footer.php');
 
-function validateClient($clientId){
+function validateClient($clientId)
+{
     $clientObject = new Services_Paymill_Clients(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
-    return  validatePaymillId($clientObject, $clientId);
+    return validatePaymillId($clientObject, $clientId);
 }
-function validatePayment($paymentId){
+
+function validatePayment($paymentId)
+{
     $paymentObject = new Services_Paymill_Payments(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), "https://api.paymill.com/v2/");
     return validatePaymillId($paymentObject, $paymentId);
 }
-function validatePaymillId($object, $id){
-    $isValid = false;    
+
+function validatePaymillId($object, $id)
+{
+    $isValid = false;
     $objectResult = $object->getOne($id);
-    if(array_key_exists('id', $objectResult)){
+    if (array_key_exists('id', $objectResult)) {
         $isValid = $id === $objectResult['id'];
     }
     return $isValid;

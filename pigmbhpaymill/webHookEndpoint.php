@@ -12,7 +12,6 @@ if (validateNotification($request)) {
     echo "OK";
 }
 
-
 // **** FUNCTIONS ****
 function validateNotification($notification)
 {
@@ -38,7 +37,7 @@ function getOrderIdFromNotification($transactionDescription)
     $regexPattern = '/OrderID: (\d+)/i';
     $matches = array();
     if (preg_match($regexPattern, $transactionDescription, $matches)) {
-        return (int)$matches[1];
+        return (int) $matches[1];
     }
     return false;
 }

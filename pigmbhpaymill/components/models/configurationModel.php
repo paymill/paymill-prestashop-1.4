@@ -45,24 +45,24 @@ class configurationModel
     private $_directdebit;
 
     /**
-     * @var boolean
+     * @var int
      */
-    private $_sepa;
+    private $_debitDays;
 
     /**
      * @return boolean
      */
-    public function getSepa()
+    public function getDebitDays()
     {
-        return $this->_sepa;
+        return $this->_debitDays;
     }
 
     /**
-     * @param boolean $sepa
+     * @param boolean $debitDays
      */
-    public function setSepa($sepa)
+    public function setDebitDays($debitDays)
     {
-        $this->_sepa = $sepa;
+        $this->_debitDays = $debitDays;
     }
 
 

@@ -67,8 +67,8 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         }
         $result = $paymentProcessor->processPayment();
         $this->log(
-            'Payment processing resulted in'
-            , ($result ? 'Success' : 'Fail')
+                'Payment processing resulted in'
+                , ($result ? 'Success' : 'Fail')
         );
 
         $paymill = new PigmbhPaymill();
@@ -77,7 +77,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             $customer = new Customer((int) $cart->id_customer);
             $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), (int) $cart->id_customer);
             $orderID = $paymill->validateOrder(
-                (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $customer->secure_key);
+                    (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymill->displayName, null, array(), null, false, $customer->secure_key);
             $this->updatePaymillTransaction($paymentProcessor->getTransactionId(), 'OrderID: ' . $orderID . ' - Name:' . $user["lastname"] . ', ' . $user["firstname"]);
             Tools::redirect('order-confirmation.php?key=' . $customer->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
         } else {
@@ -109,9 +109,9 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         $db = Db::getInstance();
         $table = Tools::getValue('payment') == 'creditcard' ? 'pigmbh_paymill_creditcard_userdata' : 'pigmbh_paymill_directdebit_userdata';
         try {
-            $query = 'SELECT COUNT(*) as `count` FROM '.$table.' WHERE clientId="' . $clientId . '";';
-            $count = $db->executeS($query,true);
-            $count = (int)$count[0]['count'];
+            $query = 'SELECT COUNT(*) as `count` FROM ' . $table . ' WHERE clientId="' . $clientId . '";';
+            $count = $db->executeS($query, true);
+            $count = (int) $count[0]['count'];
             if ($count === 0) {
                 //insert
                 $this->log("Inserted new data.", var_export(array($clientId, $paymentId, $userId), true));
