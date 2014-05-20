@@ -28,6 +28,7 @@ class configurationHandler
                 'PIGMBH_PAYMILL_CREDITCARD',
                 'PIGMBH_PAYMILL_FASTCHECKOUT',
                 'PIGMBH_PAYMILL_DEBIT_DAYS',
+                'PIGMBH_PAYMILL_ACCEPTED_BRANDS',
             )
         );
         $configModel->setPublicKey(isset($config['PIGMBH_PAYMILL_PUBLICKEY']) ? $config['PIGMBH_PAYMILL_PUBLICKEY'] : '');
@@ -38,6 +39,7 @@ class configurationHandler
         $configModel->setCreditcard(isset($config['PIGMBH_PAYMILL_CREDITCARD']) ? $config['PIGMBH_PAYMILL_CREDITCARD'] : false);
         $configModel->setFastcheckout(isset($config['PIGMBH_PAYMILL_FASTCHECKOUT']) ? $config['PIGMBH_PAYMILL_FASTCHECKOUT'] : false);
         $configModel->setDebitDays(isset($config['PIGMBH_PAYMILL_DEBIT_DAYS']) ? $config['PIGMBH_PAYMILL_DEBIT_DAYS'] : false);
+        $configModel->setAccpetedCreditCards(isset($config['PIGMBH_PAYMILL_ACCEPTED_BRANDS']) ? json_decode($config['PIGMBH_PAYMILL_ACCEPTED_BRANDS'], true) : false);
         return $configModel;
     }
 
@@ -55,6 +57,7 @@ class configurationHandler
         Configuration::updateValue('PIGMBH_PAYMILL_LOGGING', $model->getLogging());
         Configuration::updateValue('PIGMBH_PAYMILL_FASTCHECKOUT', $model->getFastcheckout());
         Configuration::updateValue('PIGMBH_PAYMILL_DEBIT_DAYS', $model->getDebitDays());
+        Configuration::updateValue('PIGMBH_PAYMILL_ACCEPTED_BRANDS', json_encode($model->getAccpetedCreditCards()));
     }
 
     /**
@@ -70,6 +73,24 @@ class configurationHandler
         Configuration::updateValue('PIGMBH_PAYMILL_LOGGING', 'ON');
         Configuration::updateValue('PIGMBH_PAYMILL_FASTCHECKOUT', 'OFF');
         Configuration::updateValue('PIGMBH_PAYMILL_DEBIT_DAYS', '7');
+        Configuration::updateValue(
+            'PIGMBH_PAYMILL_ACCEPTED_BRANDS',
+            json_encode(
+                array(
+                    'visa' => false,
+                    'mastercard' => false,
+                    'amex' => false,
+                    'carta-si' => false,
+                    'carte-bleue' => false,
+                    'diners-club' => false,
+                    'jcb' => false,
+                    'maestro' => false,
+                    'china-unionpay' => false,
+                    'discover' => false,
+                    'dankort' => false
+                )
+            )
+        );
         return true; //needs to return true for installation
     }
 

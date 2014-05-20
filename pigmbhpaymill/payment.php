@@ -75,6 +75,13 @@ if ($dbData && validatePayment($dbData['paymentId'])) {
 $currency = Currency::getCurrency((int) $cart->id_currency);
 $_SESSION['pigmbhPaymill']['authorizedAmount'] = (int) round($cart->getOrderTotal(true, Cart::BOTH) * 100);
 
+
+$brands = array();
+
+foreach (json_decode(Configuration::get('PIGMBH_PAYMILL_ACCEPTED_BRANDS'), true) as $brandKey => $brandValue) {
+    $brands[str_replace('-', '', $brandKey)] = $brandValue;
+}
+
 $data = array(
     'nbProducts' => $cart->nbProducts(),
     'cust_currency' => $cart->id_currency,
@@ -89,6 +96,8 @@ $data = array(
     'components' => _PS_BASE_URL_ . __PS_BASE_URI__ . 'modules/pigmbhpaymill/components/',
     'customer' => $customer['firstname'] . " " . $customer['lastname'],
     'prefilledFormData' => $payment,
+    'acceptedBrands' => Configuration::get('PIGMBH_PAYMILL_ACCEPTED_BRANDS'),
+    'acceptedBrandsDecoded' => $brands
 );
 
 $smarty->assign($data);

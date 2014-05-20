@@ -1,14 +1,17 @@
-#paymill_form {
+#paymill_form 
+{
     float: right;
     width: 100%;
 }
 
-#paymill_form div{
+#paymill_form div
+{
     /* clean up mobile design*/
     border: none !important;
 }
 
-#paymill_form input[type="text"] {
+#paymill_form input[type="text"] 
+{
     position: absolute;
     padding: 7px;
     top: 20px;
@@ -27,61 +30,74 @@
     transition: all 0.3s;
 }
 
-#paymill_form .center{
+#paymill_form .center 
+{
     margin-left: auto;
     margin-right: auto;
     width: 340px;
 }
 
-#paymill_form input[type="text"]:focus {
+#paymill_form input[type="text"]:focus 
+{
     border-color: #6d7578;
     outline: none;
     color: #424a4d;
 }
 
-#paymill_form .debit{
+#paymill_form .debit
+{
     width: 370px;
     margin-left: auto;
     margin-right: auto;
 }
 
-#paymill_form .field-error {
+#paymill_form .field-error 
+{
     border-color: #FF0000 !important;
 }
 
-#paymill_form .field-left {
+#paymill_form .field-left 
+{
+    font-size: 10px;
     width: 180px;
     left: 0px;
 }
 
-#paymill_form .field-right {
-    left: 240px;
-    width: 140px;
+#paymill_form .field-right 
+{
+    font-size: 10px;
+    left: 220px;
+    width: 120px;
 }
 
-#paymill_form .field-full {
+#paymill_form .field-full 
+{
+    font-size: 10px;
     width: 340px;
     left: 0px;
 }
 
-
-#paymill_form fieldset {
+#paymill_form fieldset 
+{
     position: relative;
     border: none;
     height: 70px;
 }
 
-#paymill_form label {
+#paymill_form label 
+{
     position: absolute;
     font-weight: bold;
     font-size: 13px;
 }
 
-#paymill_form .paymill_confirm_button{
+#paymill_form .paymill_confirm_button
+{
     float:right;
 }
 
-.paymill-tooltip {
+.paymill-tooltip 
+{
     margin-left: 3px;
     font-size: 11px;
     color: #E2E2E2;
@@ -90,7 +106,8 @@
     background: #636363;
 }
 
-.paymill_error{
+.paymill_error
+{
     color: #000;
     background: #F8E2E2;
     border: 1px solid #FF1B1B;
@@ -173,7 +190,8 @@
 }
 
 /* Admin */
-.dataTableHeadingContent {
+.dataTableHeadingContent 
+{
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 10px;
     font-weight: bold;
@@ -181,7 +199,8 @@
     background-color: #f1f1f1;
     border: 1px solid #CCCCCC;
 }
-.dataTableContent {
+.dataTableContent 
+{
     font-family: Verdana, Arial, sans-serif;
     font-size: 10px;
     color: #000000;
@@ -190,23 +209,28 @@
     border-bottom: 1px dashed #cccccc;
 }
 
-.paymill_config_header {
+.paymill_config_header
+{
     font-weight: bold;
 }
 
-.paymill_center{
+.paymill_center 
+{
     margin-left: auto;
     margin-right: auto;
     width: 575px;
 }
-.paymill_config_label{
+.paymill_config_label 
+{
     width: 300px;
 }
-.paymill_config_value{
+.paymill_config_value 
+{
     text-align: center;
     width: 300px;
 }
 
-.paymill_config_text{
+.paymill_config_text 
+{
     width: 220px;
 }
