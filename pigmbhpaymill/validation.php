@@ -88,10 +88,33 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
                 $paymentText = $paymill->l('Credit Card');
             }
             
-            $this->saveUserData($paymentProcessor->getClientId(), $paymentProcessor->getPaymentId(), (int) $cart->id_customer);
+            $_SESSION['piPaymentText'] = $paymentText;
+            
+            $this->saveUserData(
+                    $paymentProcessor->getClientId(), 
+                    $paymentProcessor->getPaymentId(), 
+                    (int) $cart->id_customer
+            );
+            
             $orderID = $paymill->validateOrder(
-                    (int) $cart->id, Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), $cart->getOrderTotal(true, Cart::BOTH), $paymentText, null, array(), null, false, $customer->secure_key);
-            $this->updatePaymillTransaction($paymentProcessor->getTransactionId(), 'OrderID: ' . $orderID . ' - Name:' . $user["lastname"] . ', ' . $user["firstname"]);
+                    (int) $cart->id, 
+                    Configuration::get('PIGMBH_PAYMILL_ORDERSTATE'), 
+                    $cart->getOrderTotal(true, Cart::BOTH), 
+                    $paymentText, 
+                    null, 
+                    array(), 
+                    null, 
+                    false, 
+                    $customer->secure_key
+            );
+            
+            $_SESSION['piOrderId'] = $orderID;
+            
+            $this->updatePaymillTransaction(
+                    $paymentProcessor->getTransactionId(), 
+                    'OrderID: ' . $orderID . ' - Name:' . $user["lastname"] . ', ' . $user["firstname"]
+            );
+            
             Tools::redirect('order-confirmation.php?key=' . $customer->secure_key . '&id_cart=' . (int) $cart->id . '&id_module=' . (int) $paymill->id . '&id_order=' . (int) $paymill->currentOrder);
         } else {
             $errorMessage = $paymill->errorCodeMapping($paymentProcessor->getErrorCode());
@@ -111,8 +134,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
             try {
                 $db->execute($sql);
             } catch (exception $e) {
-                print_r($e);
-                exit;
+                
             }
         }
     }

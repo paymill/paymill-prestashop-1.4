@@ -26,7 +26,16 @@ class PigmbhPaymill extends PaymentModule
     public function __construct()
     {
         global $smarty;
-        $this->name = 'pigmbhpaymill';
+        session_start();
+        if (isset($_SESSION['piOrderId']) && Tools::getValue('id_order') == $_SESSION['piOrderId']) {
+            $name = $_SESSION['piPaymentText'];
+            unset($_SESSION['piPaymentText']);
+            unset($_SESSION['piOrderId']);
+        } else {
+            $name = $this->l('PigmbhPaymill');
+        }
+        
+        $this->name =  'pigmbhpaymill';
         $this->tab = 'payments_gateways';
         $this->version = "1.4.0";
         $this->author = 'PayIntelligent GmbH';
@@ -39,7 +48,7 @@ class PigmbhPaymill extends PaymentModule
 
         $this->smarty = $smarty;
         $this->_configurationHandler = new configurationHandler();
-        $this->displayName = $this->l('PigmbhPaymill');
+        $this->displayName = $name;
         $this->description = $this->l('Payment via Paymill.');
     }
 
