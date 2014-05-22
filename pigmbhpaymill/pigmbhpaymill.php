@@ -303,7 +303,7 @@ class PigmbhPaymill extends PaymentModule
                         <tr><td class="paymill_config_label">' . $this->l('Activate debugging') . '</td><td class="paymill_config_value"><input type="checkbox" name="debug" ' . $this->getCheckboxState($configurationModel->getDebug()) . ' /></td></tr>
                         <tr><td class="paymill_config_label">' . $this->l('Activate logging') . '</td><td class="paymill_config_value"><input type="checkbox" name="logging" ' . $this->getCheckboxState($configurationModel->getLogging()) . ' /></td></tr>
                         <tr><td class="paymill_config_label">' . $this->l('Activate fastCheckout') . '</td><td class="paymill_config_value"><input type="checkbox" name="fastcheckout" ' . $this->getCheckboxState($configurationModel->getFastcheckout()) . ' /></td></tr>
-                        <tr><td class="paymill_config_label">' . $this->l('Accepted CreditCard Brands') . '</td><td class="paymill_config_value"><select multiple name="accepted_brands[]">' . $this->_getAccepetdBrandOptions($configurationModel) . '</select></td></tr>
+                        <tr><td class="paymill_config_label">' . $this->l('Accepted CreditCard Brands') . '</td><td class="paymill_config_value"><select style="width: 230px; height: 90px;" multiple name="accepted_brands[]">' . $this->_getAccepetdBrandOptions($configurationModel) . '</select></td></tr>
                         <tr><td colspan="2" align="center"><input class="button" name="btnSubmit" value="' . $this->l('Save') . '" type="submit" /></td></tr>
                     </table>
                 </fieldset>
