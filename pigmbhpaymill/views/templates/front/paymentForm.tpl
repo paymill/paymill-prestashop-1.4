@@ -196,7 +196,7 @@
             alert("API returned error: " + getErrorMessage(error.apierror));
             submitted = false;
             if(error.apierror === 'invalid_public_key' || error.apierror === 'unknown_error'){
-                location.href = 'order.php?paymillpayment=' . $payment . '&step=3&paymillerror=1&errorCode=10001';
+                location.href = 'order.php?paymillpayment={$payment}&step=3&paymillerror=1&errorCode=10001';
             }
         } else {
             debug("Received token from Paymill API: " + result.token);
