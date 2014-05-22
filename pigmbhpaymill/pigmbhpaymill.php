@@ -26,7 +26,10 @@ class PigmbhPaymill extends PaymentModule
     public function __construct()
     {
         global $smarty;
-        session_start();
+        if(session_id() == '') {
+            session_start();
+        }
+        
         if (isset($_SESSION['piOrderId']) && Tools::getValue('id_order') == $_SESSION['piOrderId']) {
             $name = $_SESSION['piPaymentText'];
             unset($_SESSION['piPaymentText']);
@@ -117,6 +120,7 @@ class PigmbhPaymill extends PaymentModule
             'debit' => Configuration::get('PIGMBH_PAYMILL_DEBIT'),
             'creditcard' => Configuration::get('PIGMBH_PAYMILL_CREDITCARD'),
             'valid_key' => !in_array(Configuration::get('PIGMBH_PAYMILL_PRIVATEKEY'), array('', null)) && !in_array(Configuration::get('PIGMBH_PAYMILL_PUBLICKEY'), array('', null)),
+            'paymillpayment' => Tools::getValue('paymillpayment'),
         ));
         return $this->display(__FILE__, 'views/templates/hook/payment.tpl');
     }

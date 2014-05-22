@@ -119,7 +119,7 @@ class PigmbhpaymillValidationModuleFrontController implements Services_Paymill_L
         } else {
             $errorMessage = $paymill->errorCodeMapping($paymentProcessor->getErrorCode());
             $this->log('ErrorCode', $errorMessage);
-            Tools::redirect('order.php?step=3&paymillerror=1&errorCode=' . $paymentProcessor->getErrorCode());
+            Tools::redirect('order.php?paymillpayment=' . $payment . '&step=3&paymillerror=1&errorCode=' . $paymentProcessor->getErrorCode());
         }
     }
 
