@@ -1,3 +1,8 @@
+## 1.4.1
+* Remove CURLOPT_CAINFO - path to Certificate Authority (CA) bundle
+* Remove paymill.crt
+* Change user agent info to "Paymill-Prestashop/1.4.1"
+
 ## 1.4.0
 * add payment logos
 * merge elv / sepa form
